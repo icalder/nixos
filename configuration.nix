@@ -13,6 +13,8 @@
     <nixos-wsl/modules>
   ];
 
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+
   wsl.enable = true;
   wsl.defaultUser = "itcalde";
 
