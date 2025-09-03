@@ -30,6 +30,7 @@
     vim
     wget
     nixfmt-rfc-style
+    usbutils
   ];
 
   programs.git.enable = true;
@@ -40,7 +41,7 @@
     isNormalUser  = true;
     home  = "/home/itcalde";
     description  = "Iain Calder";
-    extraGroups  = [ "wheel" ];
+    extraGroups  = [ "wheel" "dialout" ];
     # openssh.authorizedKeys.keys  = [ "ssh-dss AAAAB3Nza... alice@foobar" ];
   };
 }
