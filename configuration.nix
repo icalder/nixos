@@ -31,6 +31,7 @@
     wget
     nixfmt-rfc-style
     usbutils
+    kmod # for modprobe, required by WSL usbipd
   ];
 
   programs.git.enable = true;
