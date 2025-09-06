@@ -5,7 +5,12 @@
 # NixOS-WSL specific options are documented on the NixOS-WSL repository:
 # https://github.com/nix-community/NixOS-WSL
 
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   imports = [
@@ -13,7 +18,10 @@
     <nixos-wsl/modules>
   ];
 
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings.experimental-features = [
+    "nix-command"
+    "flakes"
+  ];
 
   wsl.enable = true;
   wsl.defaultUser = "itcalde";
@@ -25,6 +33,8 @@
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "24.11"; # Did you read the comment?
+
+  virtualisation.docker.enable = true;
 
   environment.systemPackages = with pkgs; [
     vim
@@ -39,10 +49,14 @@
   programs.nix-ld.enable = true;
 
   users.users.itcalde = {
-    isNormalUser  = true;
-    home  = "/home/itcalde";
-    description  = "Iain Calder";
-    extraGroups  = [ "wheel" "dialout" ];
+    isNormalUser = true;
+    home = "/home/itcalde";
+    description = "Iain Calder";
+    extraGroups = [
+      "wheel"
+      "dialout"
+      "docker"
+    ];
     # openssh.authorizedKeys.keys  = [ "ssh-dss AAAAB3Nza... alice@foobar" ];
   };
 }
