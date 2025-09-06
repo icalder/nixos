@@ -6,7 +6,11 @@
 # Home manager options search: https://home-manager-options.extranix.com/?query=ssh&release=release-24.05
 
 let
-  config-dir = if builtins.getEnv("XDG_CONFIG_DIR") != "" then builtins.getEnv("XDG_CONFIG_DIR") else "${config.home.homeDirectory}/.config";
+  config-dir =
+    if builtins.getEnv ("XDG_CONFIG_DIR") != "" then
+      builtins.getEnv ("XDG_CONFIG_DIR")
+    else
+      "${config.home.homeDirectory}/.config";
 in
 {
   # Home Manager needs a bit of information about you and the paths it should
@@ -61,10 +65,11 @@ in
     # ".config/warp-terminal/user_preferences.json".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/warp-terminal.json"; # warp terminal
     # ".config/Code/User/settings.json".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/vscode-settings.json"; # vscode settings.json
 
-    ".gitconfig".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/gitconfig";
-#     ".ssh/id_rsa.pub".text = ''
-# ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAuSEf//2a4x+eTqtmhNfQuTJ0vMmGSq5En6FAsxTUYPauzXmH59sG/SRryZpsQq+nGEZLfQ1R2mAq8M71ZJPCCOoYTN3yxdyCpjlodva7+5PpTvE9KQmThlm9Y+RL8dVq413uEwlav2kLa0RBsx10i2vcVMJ1FKno7mQz5/u6G3CXt++YJoPWoNVPIxIIefUot2kj9b2b7wf4EuWPOr5noH41N/E67/1OqfItqaaSGgP9ky9qCKdrI8J1ukhSDsvxmlF/f0kgpl6KVAEpx0/qfVsBoR5BBuNJg8gcWUso0Y92D+7sWULKXZV69Ka4uJ93HqCrKkd1iQpGOO/n6VCRkQ== itcalde@wombatzone.localdomain
-#     '';
+    ".gitconfig".source =
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/gitconfig";
+    #     ".ssh/id_rsa.pub".text = ''
+    # ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAuSEf//2a4x+eTqtmhNfQuTJ0vMmGSq5En6FAsxTUYPauzXmH59sG/SRryZpsQq+nGEZLfQ1R2mAq8M71ZJPCCOoYTN3yxdyCpjlodva7+5PpTvE9KQmThlm9Y+RL8dVq413uEwlav2kLa0RBsx10i2vcVMJ1FKno7mQz5/u6G3CXt++YJoPWoNVPIxIIefUot2kj9b2b7wf4EuWPOr5noH41N/E67/1OqfItqaaSGgP9ky9qCKdrI8J1ukhSDsvxmlF/f0kgpl6KVAEpx0/qfVsBoR5BBuNJg8gcWUso0Y92D+7sWULKXZV69Ka4uJ93HqCrKkd1iQpGOO/n6VCRkQ== itcalde@wombatzone.localdomain
+    #     '';
   };
 
   # Home Manager can also manage your environment variables through
@@ -99,11 +104,19 @@ in
     shellAliases = {
       # https://nix.dev/tutorials/nix-language.html
       # https://nixos.org/guides/nix-pills/04-basics-of-language.html
-      gsudo = "sudo git -c \"include.path=${config-dir}/git/config\" -c \"include.path=${builtins.getEnv("HOME")}/.gitconfig\"";
-    #   ll = "ls -l";
-    #   la = "ls -la";
-    #   l = "ls -CF";
+      gsudo = "sudo git -c \"include.path=${config-dir}/git/config\" -c \"include.path=${builtins.getEnv ("HOME")}/.gitconfig\"";
+      #   ll = "ls -l";
+      #   la = "ls -la";
+      #   l = "ls -CF";
     };
+
+    # git clone https://github.com/magicmonty/bash-git-prompt.git ~/.bash-git-prompt --depth=1
+    initExtra = ''
+      if [ -f "$HOME/.bash-git-prompt/gitprompt.sh" ]; then
+          GIT_PROMPT_ONLY_IN_REPO=1
+          source "$HOME/.bash-git-prompt/gitprompt.sh"
+      fi
+    '';
   };
 
   programs.ssh = {
