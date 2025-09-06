@@ -96,6 +96,9 @@ in
   programs.home-manager.enable = true;
 
   programs.bash = {
+    # All available options are listed here:
+    # https://mynixos.com/home-manager/options/programs.bash
+
     enable = true;
 
     # This option allows you to set the default shell for your user. It is
