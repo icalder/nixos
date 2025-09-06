@@ -67,6 +67,7 @@ in
 
     ".gitconfig".source =
       config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/gitconfig";
+    ".npmrc".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/npmrc";
     #     ".ssh/id_rsa.pub".text = ''
     # ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAuSEf//2a4x+eTqtmhNfQuTJ0vMmGSq5En6FAsxTUYPauzXmH59sG/SRryZpsQq+nGEZLfQ1R2mAq8M71ZJPCCOoYTN3yxdyCpjlodva7+5PpTvE9KQmThlm9Y+RL8dVq413uEwlav2kLa0RBsx10i2vcVMJ1FKno7mQz5/u6G3CXt++YJoPWoNVPIxIIefUot2kj9b2b7wf4EuWPOr5noH41N/E67/1OqfItqaaSGgP9ky9qCKdrI8J1ukhSDsvxmlF/f0kgpl6KVAEpx0/qfVsBoR5BBuNJg8gcWUso0Y92D+7sWULKXZV69Ka4uJ93HqCrKkd1iQpGOO/n6VCRkQ== itcalde@wombatzone.localdomain
     #     '';
@@ -91,6 +92,13 @@ in
   home.sessionVariables = {
     # EDITOR = "emacs";
   };
+
+  home.sessionPath = [
+    # Add custom paths to your $PATH here. For example, if you have a
+    # directory where you store your own scripts, you can add it like this:
+    # "${config.home.homeDirectory}/bin"
+    "${config.home.homeDirectory}/.npm-global/bin"
+  ];
 
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
