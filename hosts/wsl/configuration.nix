@@ -15,7 +15,7 @@
 {
   imports = [
     # include NixOS-WSL modules
-    <nixos-wsl/modules>
+    # <nixos-wsl/modules>
   ];
 
   nix.settings.experimental-features = [
