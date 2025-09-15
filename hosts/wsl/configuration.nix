@@ -13,18 +13,10 @@
 }:
 
 {
-  imports = [
-    # include NixOS-WSL modules
-    # <nixos-wsl/modules>
-  ];
-
   nix.settings.experimental-features = [
     "nix-command"
     "flakes"
   ];
-
-  wsl.enable = true;
-  wsl.defaultUser = "itcalde";
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
