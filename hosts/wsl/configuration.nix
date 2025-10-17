@@ -13,11 +13,6 @@
 }:
 
 {
-  nix.settings.experimental-features = [
-    "nix-command"
-    "flakes"
-  ];
-
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
   # on your system were taken. It's perfectly fine and recommended to leave
@@ -34,7 +29,35 @@
     nixfmt-rfc-style
     usbutils
     kmod # for modprobe, required by WSL usbipd
+    hello-script
+    goodbye-script
+    hello-world-server
   ];
+
+  systemd.services.hello-world-server = {
+    description = "Hello World Server";
+    enable = false;
+
+    # This ensures the service is started at boot
+    wantedBy = [ "multi-user.target" ];
+    after = [ "network.target" ];
+
+    # Configuration for the service itself
+    serviceConfig = {
+      # It's good practice to run services as a non-privileged user
+      User = "itcalde";
+
+      # The command to start the service.
+      # This assumes your package is named 'hellow-world-server' and it
+      # provides an executable with the same name in its 'bin' directory.
+      # You may need to adjust the executable name if it's different.
+      ExecStart = "${pkgs.hello-world-server}/bin/hello-world-server";
+
+      # Automatically restart the service if it fails
+      Restart = "on-failure";
+      RestartSec = "5s";
+    };
+  };
 
   programs.git.enable = true;
   # VSCode remoting requires dynamic linking to ld-linux
