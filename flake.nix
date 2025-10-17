@@ -5,7 +5,8 @@
     # NixOS official package source, using the nixos-25.05 branch here
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
     nixos-wsl.url = "github:nix-community/nixos-wsl/release-25.05";
-    hello-world-server.url = "git+file:///home/itcalde/rust/hello-world-server";
+    #hello-world-server.url = "git+file:///home/itcalde/rust/hello-world-server";
+    hello-world-server.url = "github:icalder/hello-world-server";
   };
 
   outputs =

@@ -48,9 +48,6 @@
       User = "itcalde";
 
       # The command to start the service.
-      # This assumes your package is named 'hellow-world-server' and it
-      # provides an executable with the same name in its 'bin' directory.
-      # You may need to adjust the executable name if it's different.
       ExecStart = "${pkgs.hello-world-server}/bin/hello-world-server";
 
       # Automatically restart the service if it fails
