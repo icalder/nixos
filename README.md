@@ -25,6 +25,7 @@ ln -sf ~/nixos/home.nix .
 
 ```bash
 sudo nixos-rebuild switch
+# sudo nixos-rebuild switch --flake .#nixos
 sudo nixos-rebuild switch --rollback
 sudo nixos-rebuild switch –-upgrade
 sudo nixos-rebuild boot –-upgrade
@@ -44,7 +45,7 @@ https://nix-community.github.io/home-manager/options.xhtml
 # update flake in ~/.config/home-manager to update to update home-manager inputs
 
 home-manager generations
-home-manager switch
+home-manager switch --flake ~/nixos#itcalde
 home-manager switch –rollback
 home-manager expire-generations "-1 day"
 ```

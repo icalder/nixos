@@ -1,5 +1,5 @@
 {
-  description = "NixOS configurations";
+  description = "NixOS and Home Manager configurations";
 
   inputs = {
     # NixOS official package source, using the nixos-25.05 branch here
@@ -8,6 +8,10 @@
     nixos-wsl.url = "github:nix-community/nixos-wsl/release-25.05";
     #hello-world-server.url = "git+file:///home/itcalde/rust/hello-world-server";
     hello-world-server.url = "github:icalder/hello-world-server";
+    home-manager = {
+      url = "github:nix-community/home-manager/release-25.05";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -16,6 +20,7 @@
       nixpkgs,
       nixpkgs-unstable,
       nixos-wsl,
+      home-manager,
       hello-world-server,
       ...
     }@inputs:
@@ -66,6 +71,17 @@
             wsl.defaultUser = "itcalde";
           }
         ];
+      };
+
+      # Home Manager configuration for user "itcalde"
+      homeConfigurations.itcalde = home-manager.lib.homeManagerConfiguration {
+        inherit pkgs; # Using the same pkgs as NixOS for consistency
+
+        extraSpecialArgs = {
+          inherit unstable-pkgs;
+        };
+        # The path to your home.nix is now relative to the root flake.
+        modules = [ ./home-manager/home.nix ];
       };
     };
 }
