@@ -55,6 +55,7 @@ in
     # LSP server
     pkgs.nil
     pkgs.nixfmt-rfc-style
+    # Include nodejs by default as it's required by many agents and tools
     pkgs.nodejs
   ];
 
