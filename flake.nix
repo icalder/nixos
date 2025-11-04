@@ -4,6 +4,7 @@
   inputs = {
     # NixOS official package source, using the nixos-25.05 branch here
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     nixos-wsl.url = "github:nix-community/nixos-wsl/release-25.05";
     #hello-world-server.url = "git+file:///home/itcalde/rust/hello-world-server";
     hello-world-server.url = "github:icalder/hello-world-server";
@@ -13,6 +14,7 @@
     {
       self,
       nixpkgs,
+      nixpkgs-unstable,
       nixos-wsl,
       hello-world-server,
       ...
@@ -28,6 +30,10 @@
         ];
         config = { };
       };
+      unstable-pkgs = import nixpkgs-unstable {
+        inherit system;
+        config = { };
+      };
     in
     {
       overlays.hello = import ./overlays/hello.nix;
@@ -40,6 +46,9 @@
       nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
         inherit system;
 
+        specialArgs = {
+          inherit unstable-pkgs;
+        };
         modules = [
           {
             nixpkgs.pkgs = pkgs;

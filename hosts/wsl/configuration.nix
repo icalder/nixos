@@ -9,6 +9,7 @@
   config,
   lib,
   pkgs,
+  unstable-pkgs,
   ...
 }:
 

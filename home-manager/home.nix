@@ -1,7 +1,12 @@
 # cd ~/.config/home-manager
 # ln -sf ~/nixos/home.nix .
 
-{ config, pkgs, ... }:
+{
+  config,
+  pkgs,
+  unstable-pkgs,
+  ...
+}:
 
 # Home manager options search: https://home-manager-options.extranix.com/?query=ssh&release=release-24.05
 
@@ -46,6 +51,11 @@ in
     # (pkgs.writeShellScriptBin "my-hello" ''
     #   echo "Hello, ${config.home.username}!"
     # '')
+
+    # LSP server
+    pkgs.nil
+    pkgs.nixfmt-rfc-style
+    pkgs.nodejs
   ];
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
