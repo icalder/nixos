@@ -12,6 +12,10 @@
       url = "github:nix-community/home-manager/release-25.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nixos-generators = {
+      url = "github:nix-community/nixos-generators";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -22,6 +26,7 @@
       nixos-wsl,
       home-manager,
       hello-world-server,
+      nixos-generators,
       ...
     }@inputs:
     let
@@ -73,6 +78,24 @@
         ];
       };
 
+      nixosConfigurations.vm = nixpkgs.lib.nixosSystem {
+        inherit system;
+
+        specialArgs = {
+          inherit unstable-pkgs;
+        };
+        modules = [
+          {
+            nixpkgs.pkgs = pkgs;
+            nix.settings.experimental-features = [
+              "nix-command"
+              "flakes"
+            ];
+          }
+          ./hosts/vm/configuration.nix
+        ];
+      };
+
       # Home Manager configuration for user "itcalde"
       homeConfigurations.itcalde = home-manager.lib.homeManagerConfiguration {
         inherit pkgs; # Using the same pkgs as NixOS for consistency
@@ -82,6 +105,28 @@
         };
         # The path to your home.nix is now relative to the root flake.
         modules = [ ./home-manager/home.nix ];
+      };
+
+      packages.${system}.hyperv-image = nixos-generators.nixosGenerate {
+        inherit system;
+        format = "hyperv";
+        specialArgs = {
+          inherit unstable-pkgs;
+        };
+        modules = [
+          {
+            nixpkgs.pkgs = pkgs;
+            nix.settings.experimental-features = [
+              "nix-command"
+              "flakes"
+            ];
+          }
+          {
+            virtualisation.diskSize = 20 * 1024; # 20GB
+          }
+          ./hosts/vm/configuration.nix
+        ];
+
       };
     };
 }
