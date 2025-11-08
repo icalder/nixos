@@ -100,7 +100,14 @@ To build a VHDX image for use with Microsoft Hyper-V:
 
 2.  The resulting VHDX image will be available in the `result` directory. You can then create a new **Generation 2** virtual machine in Hyper-V and use this VHDX as the existing hard disk.
 
-3. To rebuild when logged into the vm, run:
+3. Updates to the VM configuration, and rebuilds, can be done remotely with ssh access:
+
+  ```bash
+  # Build your new configuration from your flake and deploy it to the VM
+  sudo nixos-rebuild switch --flake /path/to/your/flake#hostname --target-host root@<VM-IP>
+  ```
+
+4. To rebuild when logged into the vm, run:
 
     ```bash
     mkdir ~/nixos
