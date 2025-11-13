@@ -57,6 +57,8 @@ in
     pkgs.nixfmt-rfc-style
     # Include nodejs by default as it's required by many agents and tools
     pkgs.nodejs
+    # Required for paplay
+    pkgs.pulseaudio
   ];
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
