@@ -84,7 +84,7 @@
   };
   security.sudo.wheelNeedsPassword = false;
   # this allows remote nixos-rebuild via ssh to trust binary packages copied over by my user
-  nix.settings.trustedUsers = [
+  nix.settings.trusted-users = [
     "root"
     "itcalde"
   ];
