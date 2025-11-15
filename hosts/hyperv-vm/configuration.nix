@@ -15,6 +15,9 @@
   #   ./hardware-configuration.nix
   # ];
 
+  virtualisation.hypervGuest.enable = true;
+
+  # https://search.nixos.org/options?channel=unstable&show=fileSystems&size=50&sort=relevance&query=fileSystems
   fileSystems."/" = {
     label = "nixos";
     fsType = "ext4";
@@ -80,6 +83,11 @@
     ];
   };
   security.sudo.wheelNeedsPassword = false;
+  # this allows remote nixos-rebuild via ssh to trust binary packages copied over by my user
+  nix.settings.trustedUsers = [
+    "root"
+    "itcalde"
+  ];
 
   # programs.firefox.enable = true;
   programs.git.enable = true;

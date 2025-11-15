@@ -104,20 +104,14 @@ To build a VHDX image for use with Microsoft Hyper-V:
 
   ```bash
   # Build your new configuration from your flake and deploy it to the VM
-  sudo nixos-rebuild switch --flake /path/to/your/flake#hostname --target-host root@<VM-IP>
+  nixos-rebuild switch --flake /path/to/your/flake#hostname --use-remote-sudo --target-host user@<VM-IP>
   ```
 
 4. To rebuild when logged into the vm, run:
 
-    ```bash
-    mkdir ~/nixos
-    cd nixos
-    cp -r /etc/nixos/* .
-    sudo nixos-generate-config --dir ./hosts/vm/
-    chmod +w ./hosts/vm/configuration.nix
-    # add imports = [ ./hardware-configuration.nix ]; to hosts/vm/configuration.nix
-    sudo nixos-rebuild switch --flake .#vm
-    ```
+  ```bash
+  sudo nixos-rebuild switch --flake github:icalder/nixos#hyperv-vm
+  ```
 
 ### Disk Size and Partitioning (Hyper-V)
 

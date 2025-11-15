@@ -78,7 +78,7 @@
         ];
       };
 
-      nixosConfigurations.vm = nixpkgs.lib.nixosSystem {
+      nixosConfigurations.hyperv-vm = nixpkgs.lib.nixosSystem {
         inherit system;
 
         specialArgs = {
@@ -92,7 +92,7 @@
               "flakes"
             ];
           }
-          ./hosts/vm/configuration.nix
+          ./hosts/hyperv-vm/configuration.nix
         ];
       };
 
@@ -124,7 +124,7 @@
           {
             virtualisation.diskSize = 20 * 1024; # 20GB
           }
-          ./hosts/vm/configuration.nix
+          ./hosts/hyperv-vm/configuration.nix
         ];
 
       };
