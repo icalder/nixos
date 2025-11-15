@@ -9,6 +9,8 @@ user:
     unitConfig = {
       # This will only run if the directory does not exist.
       ConditionPathExists = "!${config.users.users.${user}.home}/nixos/.git";
+      After = [ "network-online.target" ];
+      Wants = [ "network-online.target" ];
     };
     serviceConfig = {
       Type = "oneshot";
