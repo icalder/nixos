@@ -15,6 +15,11 @@
   #   ./hardware-configuration.nix
   # ];
 
+  fileSystems."/" = {
+    device = "/dev/disk/by-label/nixos";
+    fsType = "ext4";
+  };
+
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
@@ -87,9 +92,9 @@
     wget
   ];
 
-  environment.etc."nixos" = {
-    source = ../../.;
-  };
+  # environment.etc."nixos" = {
+  #   source = ../../.;
+  # };
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
