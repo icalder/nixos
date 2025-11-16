@@ -97,6 +97,7 @@ To build a VHDX image for use with Microsoft Hyper-V:
     ```bash
     nix build .#hyperv-image
     ```
+    This command will build the image and create a `result` symlink to the generated VHDX.
 
 2.  The resulting VHDX image will be available in the `result` directory. You can then create a new **Generation 2** virtual machine in Hyper-V and use this VHDX as the existing hard disk.
 
@@ -113,17 +114,47 @@ To build a VHDX image for use with Microsoft Hyper-V:
   sudo nixos-rebuild switch --flake github:icalder/nixos#hyperv-vm
   ```
 
+### Raspberry PI
+
+WIP.
+
+See https://github.com/mcdonc/.nixconfig/blob/master/videos/rpi/script.rst.
+
+1. Cross-Compilation (Recommended for New Builds) ⚙️
+
+This is the fastest and most efficient long-term solution. You configure your x86_64 host machine to build the software for the aarch64 target machine.
+
+Configure NixOS Flake/Config: In your configuration file (especially if using a Flake), you explicitly tell Nix to use your current system as the build host but target the ARM architecture.
+Nix
+
+```
+{
+  nixosConfigurations.my-arm-device = nixpkgs.lib.nixosSystem {
+    system = "aarch64-linux"; # This is the target architecture
+    modules = [
+      # ... your ARM-specific configuration modules
+      {
+        # Tells Nix to cross-compile from your build host
+        nixpkgs.buildPlatform = "x86_64-linux"; 
+        nixpkgs.hostPlatform = "aarch64-linux";
+      }
+    ];
+  };
+}
+```
+You can learn more about deploying NixOS to devices like the Raspberry Pi in this video: NixOS on Raspberry Pi 4 - Cross Compile and Deploy.
+
 ### Disk Size and Partitioning (Hyper-V)
 
 You can control the disk size and partitioning scheme for your Hyper-V image within the `flake.nix` configuration.
 
 #### Disk Size
 
-The disk size is now specified within the modules passed to `nixos-generators.nixosGenerate` using the `virtualisation.diskSize` option. For example, to set the disk size to 20GB:
+The disk size is specified within the `nixosConfigurations.hyperv-vm` modules using the `virtualisation.diskSize` option. For example, to set the disk size to 20GB:
 
 ```nix
-# In flake.nix, within the modules list passed to nixos-generators.nixosGenerate
-packages.${system}.hyperv-image = nixos-generators.nixosGenerate {
+# In flake.nix, within the modules list for nixosConfigurations.hyperv-vm
+nixosConfigurations.hyperv-vm = nixpkgs.lib.nixosSystem {
   # ...
   modules = [
     # ... other modules
@@ -190,17 +221,17 @@ For advanced and declarative partitioning, you can integrate `disko`. This invol
     }
     ```
 
-4.  **Importing the `disko` module and configuration** into the `modules` list passed to `nixos-generators.nixosGenerate` in `flake.nix`:
+4.  **Importing the `disko` module and configuration** into the `modules` list for `nixosConfigurations.hyperv-vm` in `flake.nix`:
 
     ```nix
-    # In flake.nix, within packages.${system}.hyperv-image's modules section
-    packages.${system}.hyperv-image = nixos-generators.nixosGenerate {
+    # In flake.nix, within nixosConfigurations.hyperv-vm's modules section
+    nixosConfigurations.hyperv-vm = nixpkgs.lib.nixosSystem {
       # ...
       modules = [
-        (nixpkgs + "/nixos/modules/virtualisation/hyperv-guest.nix")
+        "${nixpkgs}/nixos/modules/virtualisation/hyperv-image.nix"
         # ... existing modules
         disko.nixosModules.default
-        ./hosts/vm/disko-config.nix
+        ./hosts/hyperv-vm/disko-config.nix
       ];
     };
     ```
