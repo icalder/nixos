@@ -39,6 +39,18 @@
         inherit system;
         config = { };
       };
+      system-aarch64 = "aarch64-linux";
+      pkgs-aarch64 = import nixpkgs {
+        system = system-aarch64;
+        overlays = [
+          self.overlays.hello
+          self.overlays.goodbye
+          self.overlays.hello-world-server
+        ];
+        config = {
+          allowUnsupportedSystem = true;
+        };
+      };
     in
     {
       overlays.hello = import ./overlays/hello.nix;
@@ -69,6 +81,7 @@
           {
             wsl.enable = true;
             wsl.defaultUser = "itcalde";
+            wsl.interop.register = true;
           }
         ];
       };
@@ -95,6 +108,27 @@
         ];
       };
 
+      nixosConfigurations.pi3a = nixpkgs.lib.nixosSystem {
+        system = system-aarch64;
+        specialArgs = {
+          inherit unstable-pkgs;
+        };
+        modules = [
+          "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
+          {
+            # Tells Nix to cross-compile from your build host
+            nixpkgs.buildPlatform = "x86_64-linux";
+            nixpkgs.hostPlatform = "aarch64-linux";
+            nixpkgs.pkgs = pkgs-aarch64;
+            nix.settings.experimental-features = [
+              "nix-command"
+              "flakes"
+            ];
+          }
+          ./hosts/pi3a/configuration.nix
+        ];
+      };
+
       # Home Manager configuration for user "itcalde"
       homeConfigurations.itcalde = home-manager.lib.homeManagerConfiguration {
         inherit pkgs; # Using the same pkgs as NixOS for consistency
@@ -106,6 +140,10 @@
         modules = [ ./home-manager/home.nix ];
       };
 
-      packages.${system}.hyperv-image = self.nixosConfigurations.hyperv-vm.config.system.build.image;
+      packages.${system} = {
+        hyperv-image = self.nixosConfigurations.hyperv-vm.config.system.build.image;
+        pi3a-image = self.nixosConfigurations.pi3a.config.system.build.sdImage;
+      };
+
     };
 }

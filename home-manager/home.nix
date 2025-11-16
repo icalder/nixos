@@ -75,6 +75,12 @@ in
     #   org.gradle.daemon.idletimeout=3600000
     # '';
 
+    ".config/nixpkgs/config.nix".text = ''
+      {
+        allowUnsupportedSystem = true;
+      }
+    ''; # to allow aarch64 on x86_64 host
+
     # ".config/warp-terminal/user_preferences.json".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/warp-terminal.json"; # warp terminal
     # ".config/Code/User/settings.json".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/dotfiles/vscode-settings.json"; # vscode settings.json
 

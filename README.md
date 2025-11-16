@@ -116,9 +116,110 @@ To build a VHDX image for use with Microsoft Hyper-V:
 
 ### Raspberry PI
 
+To build an SD card image for use with a Pi 3A+:
+
+1. Build the SD card image:
+
+  ```bash
+  nix build .#pi3a-image
+  ```
+
+3. Write the image to the SD card:
+
+   > **WARNING:** The `dd` command is a powerful tool that can overwrite any drive on your system. If you specify the wrong device, you could accidentally wipe your hard drive. Please be extremely careful and double-check the device name before running the command.
+
+   a. Optional: Mounting the SD card in WSL2
+
+      If you are running the `dd` command from WSL2, you will need to mount the SD card from Windows to WSL2.
+
+      > **WARNING:** These commands can cause data loss if you select the wrong disk. Please be extremely careful and double-check that you are selecting the correct disk for your SD card.
+
+      i. Identify the SD card in Windows:
+
+         You need to find the disk number of your SD card in Windows. You can do this using the `diskpart` utility.
+
+         1.  Open a **PowerShell** or **Command Prompt** as **Administrator**.
+         2.  Run the following commands:
+
+             ```powershell
+             diskpart
+             ```
+
+         3.  Once you are in the `diskpart` prompt, run:
+
+             ```powershell
+             list disk
+             ```
+
+         4.  This will show a list of disks connected to your system. Identify your SD card by its size. Note the **Disk ###** number.
+
+      ii. Mount the SD card in WSL2:
+
+         Now, from the same **Administrator** PowerShell or Command Prompt, use the `wsl --mount` command to attach the SD card to WSL2. Replace `<disk_number>` with the number you found in the previous step.
+
+         ```powershell
+         wsl --mount \\.\PHYSICALDRIVE<disk_number> --bare
+         ```
+
+         For example, if your SD card is `Disk 2`, the command would be:
+
+         ```powershell
+         wsl --mount \\.\PHYSICALDRIVE2 --bare
+         ```
+
+         The `--bare` flag is important because it attaches the disk as a block device without trying to mount the filesystems, which is what you need for `dd`.
+
+      iii. Unmount the SD card:
+
+         When you are finished, it's important to unmount the disk from WSL2. Go back to your **Administrator** PowerShell or Command Prompt and run:
+
+         ```powershell
+         wsl --unmount \\.\PHYSICALDRIVE<disk_number>
+         ```
+
+   b. Identify your SD card:
+
+      First, you need to identify the device name of your SD card. Insert the SD card into your computer and then run the following command to list the available block devices:
+
+      ```bash
+      lsblk
+      ```
+
+      Look for a device that matches the size of your SD card. It will likely be named something like `/dev/sda`, `/dev/sdb`, or `/dev/mmcblk0`. Make sure you have correctly identified the device name for your SD card before proceeding.
+
+   c. Write the image to the SD card:
+
+      Once you have identified the correct device name, you can use the following command to write the image to the SD card. The image is located in the `result` directory. Replace `/dev/sdX` with the device name of your SD card.
+
+      ```bash
+      zstdcat ./result/sd-image/*.img.zst | sudo dd of=/dev/sdX bs=4M conv=fsync
+      ```
+
+      **Command explanation:**
+
+      *   `zstdcat ./result/sd-image/*.img.zst`: This decompresses the `.zst` file and sends the output to the pipe.
+      *   `|`: This is the pipe, which sends the output of the `zstdcat` command to the `dd` command.
+      *   `sudo dd of=/dev/sdX`: This writes the data to the SD card. `sudo` is required for write access to the device.
+      *   `bs=4M`: This sets the block size to 4MB, which can speed up the writing process.
+      *   `conv=fsync`: This ensures that all data is written to the SD card before the command completes.
+
+   After the command finishes, the SD card will be ready to be used in your device.
+
+
+
 WIP.
 
 See https://github.com/mcdonc/.nixconfig/blob/master/videos/rpi/script.rst.
+
+```
+       b) For `nixos-rebuild` you can set
+         { nixpkgs.config.allowUnsupportedSystem = true; }
+       in configuration.nix to override this.
+
+       c) For `nix-env`, `nix-build`, `nix-shell` or any other Nix command you can add
+         { allowUnsupportedSystem = true; }
+       to ~/.config/nixpkgs/config.nix.
+```
 
 1. Cross-Compilation (Recommended for New Builds) ⚙️
 

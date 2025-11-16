@@ -22,6 +22,8 @@
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "24.11"; # Did you read the comment?
 
+  boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
+
   virtualisation.docker.enable = true;
 
   environment.systemPackages = with pkgs; [
