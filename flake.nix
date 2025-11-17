@@ -26,30 +26,29 @@
     }@inputs:
     let
       system = "x86_64-linux";
-      pkgs = import nixpkgs {
-        inherit system;
-        overlays = [
-          self.overlays.hello
-          self.overlays.goodbye
-          self.overlays.hello-world-server
-        ];
-        config = { };
-      };
+      system-aarch64 = "aarch64-linux";
+
+      # Helper to generate package sets for different systems
+      mkPkgs = system: config:
+        import nixpkgs {
+          inherit system;
+          overlays = [
+            self.overlays.hello
+            self.overlays.goodbye
+            self.overlays.hello-world-server
+          ];
+          inherit config;
+        };
+
+      pkgs = mkPkgs system { };
+
       unstable-pkgs = import nixpkgs-unstable {
         inherit system;
         config = { };
       };
-      system-aarch64 = "aarch64-linux";
-      pkgs-aarch64 = import nixpkgs {
-        system = system-aarch64;
-        overlays = [
-          self.overlays.hello
-          self.overlays.goodbye
-          self.overlays.hello-world-server
-        ];
-        config = {
-          allowUnsupportedSystem = true;
-        };
+
+      pkgs-aarch64 = mkPkgs system-aarch64 {
+        allowUnsupportedSystem = true;
       };
     in
     {
