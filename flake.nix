@@ -29,7 +29,8 @@
       system-aarch64 = "aarch64-linux";
 
       # Helper to generate package sets for different systems
-      mkPkgs = system: config:
+      mkPkgs =
+        system: config:
         import nixpkgs {
           inherit system;
           overlays = [
@@ -50,6 +51,32 @@
       pkgs-aarch64 = mkPkgs system-aarch64 {
         allowUnsupportedSystem = true;
       };
+
+      # Function to generate Hyper-V VM configuration
+      mkHypervVm =
+        hostname:
+        nixpkgs.lib.nixosSystem {
+          inherit system;
+          specialArgs = {
+            inherit unstable-pkgs;
+          };
+          modules = [
+            "${nixpkgs}/nixos/modules/virtualisation/hyperv-image.nix"
+            {
+              nixpkgs.pkgs = pkgs;
+              nix.settings.experimental-features = [
+                "nix-command"
+                "flakes"
+              ];
+            }
+            {
+              virtualisation.diskSize = 20 * 1024; # 20GB
+            }
+            ./hosts/hyperv-vm/configuration.nix
+            # Override hostname
+            { networking.hostName = hostname; }
+          ];
+        };
     in
     {
       overlays.hello = import ./overlays/hello.nix;
@@ -85,27 +112,7 @@
         ];
       };
 
-      nixosConfigurations.hyperv-vm = nixpkgs.lib.nixosSystem {
-        inherit system;
-
-        specialArgs = {
-          inherit unstable-pkgs;
-        };
-        modules = [
-          "${nixpkgs}/nixos/modules/virtualisation/hyperv-image.nix"
-          {
-            nixpkgs.pkgs = pkgs;
-            nix.settings.experimental-features = [
-              "nix-command"
-              "flakes"
-            ];
-          }
-          {
-            virtualisation.diskSize = 20 * 1024; # 20GB
-          }
-          ./hosts/hyperv-vm/configuration.nix
-        ];
-      };
+      nixosConfigurations.hyperv-vm = mkHypervVm "nixosvm";
 
       nixosConfigurations.pi3a = nixpkgs.lib.nixosSystem {
         system = system-aarch64;
