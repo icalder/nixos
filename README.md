@@ -128,54 +128,47 @@ To build an SD card image for use with a Pi 3A+:
 
    > **WARNING:** The `dd` command is a powerful tool that can overwrite any drive on your system. If you specify the wrong device, you could accidentally wipe your hard drive. Please be extremely careful and double-check the device name before running the command.
 
-   a. Optional: Mounting the SD card in WSL2
+   a. Optional: Attaching the SD card in WSL2
 
-      If you are running the `dd` command from WSL2, you will need to mount the SD card from Windows to WSL2.
+      If you are running the `dd` command from WSL2, you will need to attach the SD card from Windows to WSL2. All of the following commands are run from PowerShell on the Windows host.
 
       > **WARNING:** These commands can cause data loss if you select the wrong disk. Please be extremely careful and double-check that you are selecting the correct disk for your SD card.
 
-      i. Identify the SD card in Windows:
+      **Attaching the device:**
 
-         You need to find the disk number of your SD card in Windows. You can do this using the `diskpart` utility.
+      1.  Open **PowerShell** as **Administrator**.
 
-         1.  Open a **PowerShell** or **Command Prompt** as **Administrator**.
-         2.  Run the following commands:
+      2.  List the available USB devices to find the BUSID of your SD card reader:
 
-             ```powershell
-             diskpart
-             ```
+          ```powershell
+          usbipd list
+          ```
 
-         3.  Once you are in the `diskpart` prompt, run:
+      3.  Bind the device to share it with WSL. Replace `<BUSID>` with the actual BUSID of your SD card reader.
 
-             ```powershell
-             list disk
-             ```
+          ```powershell
+          usbipd bind --busid <BUSID>
+          ```
 
-         4.  This will show a list of disks connected to your system. Identify your SD card by its size. Note the **Disk ###** number.
+      4.  Attach the device to WSL.
 
-      ii. Mount the SD card in WSL2:
+          ```powershell
+          usbipd attach --wsl --busid <BUSID>
+          ```
+      
+      After attaching, the SD card should appear as a block device in WSL. You can verify this by running `lsblk`.
 
-         Now, from the same **Administrator** PowerShell or Command Prompt, use the `wsl --mount` command to attach the SD card to WSL2. Replace `<disk_number>` with the number you found in the previous step.
+      **Detaching the device:**
 
-         ```powershell
-         wsl --mount \\.\PHYSICALDRIVE<disk_number> --bare
-         ```
+      When you are finished, detach the device.
 
-         For example, if your SD card is `Disk 2`, the command would be:
+      1.  Open **PowerShell**.
 
-         ```powershell
-         wsl --mount \\.\PHYSICALDRIVE2 --bare
-         ```
+      2.  Detach the device using its BUSID.
 
-         The `--bare` flag is important because it attaches the disk as a block device without trying to mount the filesystems, which is what you need for `dd`.
-
-      iii. Unmount the SD card:
-
-         When you are finished, it's important to unmount the disk from WSL2. Go back to your **Administrator** PowerShell or Command Prompt and run:
-
-         ```powershell
-         wsl --unmount \\.\PHYSICALDRIVE<disk_number>
-         ```
+          ```powershell
+          usbipd detach --busid <BUSID>
+          ```
 
    b. Identify your SD card:
 
