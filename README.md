@@ -198,45 +198,14 @@ To build an SD card image for use with a Pi 3A+:
 
    After the command finishes, the SD card will be ready to be used in your device.
 
+#### Updates
 
+Updates to the VM configuration, and rebuilds, can be done remotely with ssh access:
 
-WIP.
-
-See https://github.com/mcdonc/.nixconfig/blob/master/videos/rpi/script.rst.
-
-```
-       b) For `nixos-rebuild` you can set
-         { nixpkgs.config.allowUnsupportedSystem = true; }
-       in configuration.nix to override this.
-
-       c) For `nix-env`, `nix-build`, `nix-shell` or any other Nix command you can add
-         { allowUnsupportedSystem = true; }
-       to ~/.config/nixpkgs/config.nix.
-```
-
-1. Cross-Compilation (Recommended for New Builds) ⚙️
-
-This is the fastest and most efficient long-term solution. You configure your x86_64 host machine to build the software for the aarch64 target machine.
-
-Configure NixOS Flake/Config: In your configuration file (especially if using a Flake), you explicitly tell Nix to use your current system as the build host but target the ARM architecture.
-Nix
-
-```
-{
-  nixosConfigurations.my-arm-device = nixpkgs.lib.nixosSystem {
-    system = "aarch64-linux"; # This is the target architecture
-    modules = [
-      # ... your ARM-specific configuration modules
-      {
-        # Tells Nix to cross-compile from your build host
-        nixpkgs.buildPlatform = "x86_64-linux"; 
-        nixpkgs.hostPlatform = "aarch64-linux";
-      }
-    ];
-  };
-}
-```
-You can learn more about deploying NixOS to devices like the Raspberry Pi in this video: NixOS on Raspberry Pi 4 - Cross Compile and Deploy.
+  ```bash
+  # Build your new configuration from your flake and deploy it to the PI
+  nixos-rebuild switch --flake .#pi3a --use-remote-sudo --target-host itcalde@nixos-3a
+  ```
 
 ### Disk Size and Partitioning (Hyper-V)
 

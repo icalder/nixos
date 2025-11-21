@@ -20,9 +20,12 @@
   # hardware.pulseaudio.enable = true;
 
   networking.hostName = "nixos-3a"; # Define your hostname.
-  # Keep this to make sure wifi works
-  hardware.enableRedistributableFirmware = lib.mkForce false;
-  hardware.firmware = [ pkgs.raspberrypiWirelessFirmware ];
+  # See https://mynixos.com/nixpkgs/options/hardware for all hardware options.
+  hardware = {
+    enableRedistributableFirmware = lib.mkForce false; # Keep this to make sure wifi works
+    firmware = [ pkgs.raspberrypiWirelessFirmware ];
+    rtl-sdr.enable = true;
+  };
 
   networking = {
     useDHCP = true;
@@ -79,7 +82,10 @@
   users.users.itcalde = {
     isNormalUser = true;
     description = "Iain Calder";
-    extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
+    extraGroups = [
+      "wheel" # Enable ‘sudo’ for the user.
+      "plugdev" # USB device access
+    ];
     # generate with 'mkpasswd'
     hashedPassword = "$y$j9T$OxUtWxZ68kLZ9ntA/ibzr/$E1y/aAHaFOnZVD2MGeWbG5.jkZ369v0AWWE6z2nAgD9";
     packages = with pkgs; [
@@ -109,6 +115,13 @@
     wget
     rtl-sdr-librtlsdr
   ];
+
+  services.dump1090-fa.enable = true;
+  services.dump1090-fa.extraArgs = [
+    "--quiet"
+    "--adaptive-range"
+  ];
+  #services.dump1090-fa.extraArgs = [ "--quiet" "--gain -10" ];
 
   # environment.etc."nixos" = {
   #   source = ../../.;
