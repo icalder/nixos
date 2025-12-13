@@ -212,7 +212,7 @@
   };
 
   services.fr24feed = {
-    enable = false;
+    enable = true;
     fr24key = config.age.secrets.fr24key.path;
   };
 
