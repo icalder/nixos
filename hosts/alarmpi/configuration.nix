@@ -15,6 +15,11 @@
   #   ./hardware-configuration.nix
   # ];
 
+  # Set the desired index (card number) for USB sound cards
+  boot.extraModprobeConfig = ''
+    options snd_usb_audio index=2
+  '';
+
   swapDevices = [
     {
       device = "/swapfile";
@@ -29,8 +34,6 @@
   };
 
   # See https://github.com/mcdonc/nixos-pi-zero-2/blob/main/common.nix for more options
-
-  # hardware.pulseaudio.enable = true;
 
   networking.hostName = "alarmpi"; # Define your hostname.
   # See https://mynixos.com/nixpkgs/options/hardware for all hardware options.
@@ -56,7 +59,7 @@
   time.timeZone = "Europe/London";
 
   # Enable sound.
-  services.pulseaudio.enable = true;
+  # services.pulseaudio.enable = true;
 
   # OR
   # services.pipewire = {
@@ -74,6 +77,7 @@
     extraGroups = [
       "wheel" # Enable ‘sudo’ for the user.
       "plugdev" # USB device access
+      "audio" # Audio device access
     ];
     # generate with 'mkpasswd'
     hashedPasswordFile = config.age.secrets.itcalde.path;
@@ -107,6 +111,8 @@
     rtl-sdr-librtlsdr
     dump1090-fa
     fr24feed
+    alsa-utils
+    ffmpeg
   ];
   # Configure nix-direnv globally (system-wide)
   # This section ensures that the direnvrc is configured correctly for *all* users
