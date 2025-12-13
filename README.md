@@ -123,6 +123,7 @@ To build an SD card image for use with a Pi 3A+:
 
   ```bash
   nix build .#pi3a-image
+  nix build .#alarmpi-image
   ```
 
 3. Write the image to the SD card:
@@ -186,7 +187,7 @@ To build an SD card image for use with a Pi 3A+:
       Once you have identified the correct device name, you can use the following command to write the image to the SD card. The image is located in the `result` directory. Replace `/dev/sdX` with the device name of your SD card.
 
       ```bash
-      zstdcat ./result/sd-image/*.img.zst | sudo dd of=/dev/sdX bs=4M conv=fsync
+      zstdcat ./result/sd-image/*.img.zst | sudo dd of=/dev/sdX bs=4M conv=fsync status=progress
       ```
 
       **Command explanation:**
@@ -206,6 +207,7 @@ Updates to the VM configuration, and rebuilds, can be done remotely with ssh acc
   ```bash
   # Build your new configuration from your flake and deploy it to the PI
   nixos-rebuild switch --flake .#pi3a --sudo --target-host itcalde@nixos-3a
+  nixos-rebuild switch --flake .#alarmpi --sudo --target-host itcalde@alarmpi
   ```
 
 ### Disk Size and Partitioning (Hyper-V)

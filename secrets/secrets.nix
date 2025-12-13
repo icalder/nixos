@@ -5,8 +5,12 @@ let
 
   # ssh-keyscan nixos-3a
   nixos-3a = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICqMAA/sZuIG4u5p1GVw9evmXkVerZDv87lM8SK1lGHV";
+  alarmpi = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOc81C+BaiHAbMMA0SrFW/L8smbg0m0UIXdmb5/U1hcg";
 
-  systems = [ nixos-3a ];
+  systems = [
+    nixos-3a
+    alarmpi
+  ];
 in
 {
   # agenix -e itcalde.age
@@ -19,21 +23,22 @@ in
     armor = true;
   };
 
-  # agenix -e fr24key.age
-  "fr24key.age" = {
-    publicKeys = [
-      iain
-      nixos-3a
-    ];
-    armor = true;
-  };
-
   # agenix -e wireless.conf.age
   "wireless.conf.age" = {
     publicKeys = [
       iain
     ]
     ++ systems;
+    armor = true;
+  };
+
+  # agenix -e fr24key.age
+  "fr24key.age" = {
+    publicKeys = [
+      iain
+      nixos-3a
+      alarmpi
+    ];
     armor = true;
   };
 }

@@ -73,29 +73,73 @@
 
       # Function to generate Hyper-V VM configuration
       mkHypervVm =
-        hostname:
-        nixpkgs.lib.nixosSystem {
-          inherit system;
-          specialArgs = {
-            inherit unstable-pkgs;
+        extraArgs:
+        let
+          baseArgs = {
+            inherit system;
+            specialArgs = {
+              inherit unstable-pkgs;
+            };
+            modules = [
+              "${nixpkgs}/nixos/modules/virtualisation/hyperv-image.nix"
+              {
+                nixpkgs.pkgs = pkgs;
+                nix.settings.experimental-features = [
+                  "nix-command"
+                  "flakes"
+                ];
+              }
+              {
+                virtualisation.diskSize = 20 * 1024; # 20GB
+              }
+              ./hosts/hyperv-vm/configuration.nix
+            ];
           };
-          modules = [
-            "${nixpkgs}/nixos/modules/virtualisation/hyperv-image.nix"
-            {
-              nixpkgs.pkgs = pkgs;
-              nix.settings.experimental-features = [
-                "nix-command"
-                "flakes"
-              ];
-            }
-            {
-              virtualisation.diskSize = 20 * 1024; # 20GB
-            }
-            ./hosts/hyperv-vm/configuration.nix
-            # Override hostname
-            { networking.hostName = hostname; }
-          ];
-        };
+          # combine modules, don't replace
+          combinedModules = baseArgs.modules ++ (extraArgs.modules or [ ]);
+
+          # merge extraArgs over baseArgs, but keep combined modules
+          finalArgs = (baseArgs // extraArgs) // {
+            modules = combinedModules;
+          };
+        in
+        nixpkgs.lib.nixosSystem finalArgs;
+
+      # Function to generate Raspberry Pi (aarch64) system configuration
+      mkPiSystem =
+        extraArgs:
+        let
+          baseArgs = {
+            system = system-aarch64;
+            specialArgs = {
+              inherit unstable-pkgs;
+            };
+            modules = [
+              "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
+              {
+                # Tells Nix to cross-compile from your build host
+                nixpkgs.buildPlatform = "x86_64-linux";
+                nixpkgs.hostPlatform = "aarch64-linux";
+                nixpkgs.pkgs = pkgs-aarch64;
+                nix.settings.experimental-features = [
+                  "nix-command"
+                  "flakes"
+                ];
+              }
+              fr24feed.nixosModules.fr24feed
+              agenix.nixosModules.default
+            ];
+          };
+
+          # combine modules, don't replace
+          combinedModules = baseArgs.modules ++ (extraArgs.modules or [ ]);
+
+          # merge extraArgs over baseArgs, but keep combined modules
+          finalArgs = (baseArgs // extraArgs) // {
+            modules = combinedModules;
+          };
+        in
+        nixpkgs.lib.nixosSystem finalArgs;
     in
     {
       overlays.agenix = final: prev: {
@@ -139,29 +183,18 @@
         ];
       };
 
-      nixosConfigurations.hyperv-vm = mkHypervVm "nixosvm";
-
-      nixosConfigurations.pi3a = nixpkgs.lib.nixosSystem {
-        system = system-aarch64;
-        specialArgs = {
-          inherit unstable-pkgs;
-        };
+      nixosConfigurations.hyperv-vm = mkHypervVm {
         modules = [
-          "${nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64.nix"
-          {
-            # Tells Nix to cross-compile from your build host
-            nixpkgs.buildPlatform = "x86_64-linux";
-            nixpkgs.hostPlatform = "aarch64-linux";
-            nixpkgs.pkgs = pkgs-aarch64;
-            nix.settings.experimental-features = [
-              "nix-command"
-              "flakes"
-            ];
-          }
-          fr24feed.nixosModules.fr24feed
-          ./hosts/pi3a/configuration.nix
-          agenix.nixosModules.default
+          { networking.hostName = "nixosvm"; }
         ];
+      };
+
+      nixosConfigurations.pi3a = mkPiSystem {
+        modules = [ ./hosts/pi3a/configuration.nix ];
+      };
+
+      nixosConfigurations.alarmpi = mkPiSystem {
+        modules = [ ./hosts/alarmpi/configuration.nix ];
       };
 
       # Home Manager configuration for user "itcalde"
@@ -178,6 +211,7 @@
       packages.${system} = {
         hyperv-image = self.nixosConfigurations.hyperv-vm.config.system.build.image;
         pi3a-image = self.nixosConfigurations.pi3a.config.system.build.sdImage;
+        alarmpi-image = self.nixosConfigurations.alarmpi.config.system.build.sdImage;
       };
 
     };
