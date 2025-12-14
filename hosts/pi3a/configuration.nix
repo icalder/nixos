@@ -145,6 +145,10 @@
   services.dump1090-fa.extraArgs = [
     "--quiet"
     "--adaptive-range"
+    "--lat"
+    "51.87696"
+    "--lon"
+    "-2.20132"
   ];
   #services.dump1090-fa.extraArgs = [ "--quiet" "--gain -10" ];
   systemd.services.dump1090-fa.serviceConfig = {
