@@ -30,11 +30,11 @@
         {
           default = pkgs.stdenv.mkDerivation rec {
             pname = "adsbexchange-fs";
-            version = "0.1.0";
+            version = "0.1.0-bookworm";
 
             src = pkgs.fetchurl {
               url = "https://github.com/icalder/adsbexchange/releases/download/v${version}/rootfs.tar.gz";
-              sha256 = "sha256:46541f723673322b8fa30c5edd08b6211f21d1f57a5de0582101b7d5eae92feb"; # Preserving user's hash
+              sha256 = "sha256:0f9492f4da7eee9e41cc3623f76884a55b572ae39f6d60432711f31ccbcacc30"; # Preserving user's hash
             };
 
             dontUnpack = true;

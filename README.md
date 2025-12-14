@@ -97,6 +97,8 @@ To build a VHDX image for use with Microsoft Hyper-V:
 
     ```bash
     nix build .#hyperv-image
+    nix build .#k3s-server-image
+    nix build .#k3s-agent-image
     ```
     This command will build the image and create a `result` symlink to the generated VHDX.
 
@@ -107,6 +109,8 @@ To build a VHDX image for use with Microsoft Hyper-V:
   ```bash
   # Build your new configuration from your flake and deploy it to the VM
   nixos-rebuild switch --flake /path/to/your/flake#hostname --sudo --target-host user@<VM-IP>
+  nixos-rebuild switch --flake .#k3s-server --sudo --target-host itcalde@k3sserver
+  nixos-rebuild switch --flake .#k3s-agent --sudo --target-host itcalde@k3sagent
   ```
 
 4. To rebuild when logged into the vm, run:

@@ -189,6 +189,40 @@
         ];
       };
 
+      nixosConfigurations.k3s-server = mkHypervVm {
+        modules = [
+          {
+            networking.hostName = pkgs.lib.mkForce "k3sserver";
+            boot.supportedFilesystems = [ "nfs" ];
+            services.k3s = {
+              enable = true;
+              role = "server";
+              token = "test-k3s-token";
+              clusterInit = true;
+              extraFlags = toString [
+                "--write-kubeconfig-mode 644"
+                # "--default-local-storage-path /data" - this is the local storage path on opti for the data drive
+              ];
+            };
+          }
+        ];
+      };
+
+      nixosConfigurations.k3s-agent = mkHypervVm {
+        modules = [
+          {
+            networking.hostName = pkgs.lib.mkForce "k3sagent";
+            boot.supportedFilesystems = [ "nfs" ];
+            services.k3s = {
+              enable = true;
+              role = "agent";
+              token = "test-k3s-token";
+              serverAddr = "https://k3sserver:6443";
+            };
+          }
+        ];
+      };
+
       nixosConfigurations.pi3a = mkPiSystem {
         modules = [ ./hosts/pi3a/configuration.nix ];
       };
@@ -210,6 +244,8 @@
 
       packages.${system} = {
         hyperv-image = self.nixosConfigurations.hyperv-vm.config.system.build.image;
+        k3s-server-image = self.nixosConfigurations.k3s-server.config.system.build.image;
+        k3s-agent-image = self.nixosConfigurations.k3s-agent.config.system.build.image;
         pi3a-image = self.nixosConfigurations.pi3a.config.system.build.sdImage;
         alarmpi-image = self.nixosConfigurations.alarmpi.config.system.build.sdImage;
       };
