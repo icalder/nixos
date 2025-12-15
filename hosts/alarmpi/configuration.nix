@@ -78,6 +78,7 @@
       "wheel" # Enable ‘sudo’ for the user.
       "plugdev" # USB device access
       "audio" # Audio device access
+      "dialout" # USB serial port access
     ];
     # generate with 'mkpasswd'
     hashedPasswordFile = config.age.secrets.itcalde.path;
