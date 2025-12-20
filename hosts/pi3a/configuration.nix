@@ -157,6 +157,8 @@
   #services.dump1090-fa.extraArgs = [ "--quiet" "--gain -10" ];
   systemd.services.dump1090-fa.serviceConfig = {
     PrivateNetwork = lib.mkForce false;
+    Restart = "always";
+    RestartSec = "5s";
   };
 
   services.nginx = {
