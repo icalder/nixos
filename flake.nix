@@ -201,9 +201,14 @@
               clusterInit = true;
               extraFlags = toString [
                 "--write-kubeconfig-mode 644"
-                # "--default-local-storage-path /data" - this is the local storage path on opti for the data drive
+                "--default-local-storage-path /data"
+                "--node-label \"nats-host=true\""
+                "--node-label \"postgresql-host=true\""
               ];
             };
+            systemd.tmpfiles.rules = [
+              "d /data 0755 root root -"
+            ];
           }
         ];
       };
@@ -219,6 +224,9 @@
               token = "test-k3s-token";
               serverAddr = "https://k3sserver:6443";
             };
+            systemd.tmpfiles.rules = [
+              "d /data 0755 root root -"
+            ];
           }
         ];
       };
@@ -230,6 +238,27 @@
       nixosConfigurations.alarmpi = mkPiSystem {
         modules = [ ./hosts/alarmpi/configuration.nix ];
       };
+
+      # TODO opti commented our for now until hardware-configuration.nix is available
+      # nixosConfigurations.opti = nixpkgs.lib.nixosSystem {
+      #   inherit system;
+
+      #   specialArgs = {
+      #     inherit unstable-pkgs;
+      #   };
+      #   modules = [
+      #     {
+      #       nixpkgs.pkgs = pkgs;
+      #       nix.settings.experimental-features = [
+      #         "nix-command"
+      #         "flakes"
+      #       ];
+      #     }
+      #     agenix.nixosModules.default
+      #     ./hosts/opti/configuration.nix
+      #     ./hosts/opti/changeip-update.nix
+      #   ];
+      # };
 
       # Home Manager configuration for user "itcalde"
       homeConfigurations.itcalde = home-manager.lib.homeManagerConfiguration {
