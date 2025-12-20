@@ -127,7 +127,7 @@
     fi
   '';
 
-  services.dump1090-fa.enable = false;
+  services.dump1090-fa.enable = true;
   services.dump1090-fa.extraArgs = [
     "--quiet"
     "--adaptive-range"
@@ -202,7 +202,7 @@
   };
 
   services.fr24feed = {
-    enable = false;
+    enable = true;
     fr24key = config.age.secrets.fr24key.path;
   };
 

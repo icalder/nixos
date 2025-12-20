@@ -130,6 +130,8 @@
     rtl-sdr-librtlsdr
     dump1090-fa
     fr24feed
+    alsa-utils
+    ffmpeg
   ];
   # Configure nix-direnv globally (system-wide)
   # This section ensures that the direnvrc is configured correctly for *all* users
@@ -143,7 +145,7 @@
     fi
   '';
 
-  services.dump1090-fa.enable = true;
+  services.dump1090-fa.enable = false;
   services.dump1090-fa.extraArgs = [
     "--quiet"
     "--adaptive-range"
@@ -211,14 +213,14 @@
     };
   };
   systemd.services."systemd-nspawn@adsbexchange" = {
-    enable = true;
+    enable = false;
     wantedBy = [ "machines.target" ];
     # https://mynixos.com/nixpkgs/option/systemd.mounts.*.overrideStrategy
     overrideStrategy = "asDropin";
   };
 
   services.fr24feed = {
-    enable = true;
+    enable = false;
     fr24key = config.age.secrets.fr24key.path;
   };
 
