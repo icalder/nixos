@@ -25,6 +25,11 @@
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
 
   virtualisation.docker.enable = true;
+  virtualisation.podman = {
+    enable = true;
+    # Ensure containers can talk to each other via DNS (essential for Compose)
+    defaultNetwork.settings.dns_enabled = true;
+  };
 
   environment.systemPackages = with pkgs; [
     vim
@@ -32,6 +37,7 @@
     nixfmt-rfc-style
     usbutils
     kmod # for modprobe, required by WSL usbipd
+    pkgs.docker-compose # This is V2 (the Go version) - podman needs it in PATH
     hello-script
     goodbye-script
     hello-world-server
@@ -71,6 +77,7 @@
       "wheel"
       "dialout"
       "docker"
+      "podman"
     ];
     # openssh.authorizedKeys.keys  = [ "ssh-dss AAAAB3Nza... alice@foobar" ];
   };

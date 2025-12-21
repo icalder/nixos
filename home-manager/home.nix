@@ -95,6 +95,12 @@ in
     #     '';
   };
 
+  # Optional: Let Podman search Docker Hub by default
+  xdg.configFile."containers/registries.conf".text = ''
+    [registries.search]
+    registries = ['docker.io', 'quay.io']
+  '';
+
   # Home Manager can also manage your environment variables through
   # 'home.sessionVariables'. These will be explicitly sourced when using a
   # shell provided by Home Manager. If you don't want to manage your shell
@@ -113,6 +119,8 @@ in
   #
   home.sessionVariables = {
     # EDITOR = "emacs";
+    # Silences the "Executing external compose provider" warning
+    PODMAN_COMPOSE_WARNING_LOGS = "0";
   };
 
   home.sessionPath = [
@@ -168,6 +176,7 @@ in
   };
 
   services.ssh-agent.enable = true;
+  services.podman.enable = true;
 
   home.activation = {
 
