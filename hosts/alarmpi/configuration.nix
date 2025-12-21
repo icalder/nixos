@@ -15,10 +15,9 @@
   #   ./hardware-configuration.nix
   # ];
 
-  # Set the desired index (card number) for USB sound cards
-  boot.extraModprobeConfig = ''
-    options snd_usb_audio index=2
-  '';
+  boot.kernelParams = [
+    "snd_usb_audio.index=2"
+  ];
 
   swapDevices = [
     {
@@ -141,6 +140,8 @@
     PrivateNetwork = lib.mkForce false;
     Restart = "always";
     RestartSec = "5s";
+    # Leave CPU 0 for system interrupts and other critical tasks
+    CPUAffinity = "1 2 3";
   };
 
   services.nginx = {
