@@ -10,8 +10,7 @@
 }:
 
 {
-  # TODO import hardware-configuration.nix
-  # imports = [ ./hardware-configuration.nix ];
+  imports = [ ./hardware-configuration.nix ];
 
   # Enable zRAM swap
   zramSwap = {
@@ -21,6 +20,9 @@
     priority = 100; # Ensures it is used before any disk-based swap
   };
 
+  # Use the systemd-boot EFI boot loader.
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
   boot.supportedFilesystems = [ "nfs" ];
 
   age.secrets = {

@@ -192,7 +192,7 @@ To build an SD card image for use with a Pi 3A+:
       Once you have identified the correct device name, you can use the following command to write the image to the SD card. The image is located in the `result` directory. Replace `/dev/sdX` with the device name of your SD card.
 
       ```bash
-      zstdcat ./result/sd-image/*.img.zst | sudo dd of=/dev/sdX bs=4M conv=fsync status=progress
+      zstdcat ./result/sd-image/*.img.zst | sudo dd of=/dev/sdX bs=4M conv=fsync oflag=direct status=progress
       ```
 
       **Command explanation:**

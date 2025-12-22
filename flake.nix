@@ -230,6 +230,26 @@
         ];
       };
 
+      nixosConfigurations.opti = nixpkgs.lib.nixosSystem {
+        inherit system;
+
+        specialArgs = {
+          inherit unstable-pkgs;
+        };
+        modules = [
+          {
+            nixpkgs.pkgs = pkgs;
+            nix.settings.experimental-features = [
+              "nix-command"
+              "flakes"
+            ];
+          }
+          agenix.nixosModules.default
+          ./hosts/opti/configuration.nix
+          ./hosts/opti/changeip-update.nix
+        ];
+      };
+
       nixosConfigurations.pi3a = mkPiSystem {
         modules = [
           fr24feed.nixosModules.fr24feed
@@ -249,27 +269,6 @@
           ./hosts/rpi4-1/configuration.nix
         ];
       };
-
-      # TODO opti commented our for now until hardware-configuration.nix is available
-      # nixosConfigurations.opti = nixpkgs.lib.nixosSystem {
-      #   inherit system;
-
-      #   specialArgs = {
-      #     inherit unstable-pkgs;
-      #   };
-      #   modules = [
-      #     {
-      #       nixpkgs.pkgs = pkgs;
-      #       nix.settings.experimental-features = [
-      #         "nix-command"
-      #         "flakes"
-      #       ];
-      #     }
-      #     agenix.nixosModules.default
-      #     ./hosts/opti/configuration.nix
-      #     ./hosts/opti/changeip-update.nix
-      #   ];
-      # };
 
       # Home Manager configuration for user "itcalde"
       homeConfigurations.itcalde = home-manager.lib.homeManagerConfiguration {
