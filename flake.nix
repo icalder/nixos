@@ -126,7 +126,6 @@
                   "flakes"
                 ];
               }
-              fr24feed.nixosModules.fr24feed
               agenix.nixosModules.default
             ];
           };
@@ -232,11 +231,23 @@
       };
 
       nixosConfigurations.pi3a = mkPiSystem {
-        modules = [ ./hosts/pi3a/configuration.nix ];
+        modules = [
+          fr24feed.nixosModules.fr24feed
+          ./hosts/pi3a/configuration.nix
+        ];
       };
 
       nixosConfigurations.alarmpi = mkPiSystem {
-        modules = [ ./hosts/alarmpi/configuration.nix ];
+        modules = [
+          fr24feed.nixosModules.fr24feed
+          ./hosts/alarmpi/configuration.nix
+        ];
+      };
+
+      nixosConfigurations.rpi4-1 = mkPiSystem {
+        modules = [
+          ./hosts/rpi4-1/configuration.nix
+        ];
       };
 
       # TODO opti commented our for now until hardware-configuration.nix is available
@@ -277,6 +288,7 @@
         k3s-agent-image = self.nixosConfigurations.k3s-agent.config.system.build.image;
         pi3a-image = self.nixosConfigurations.pi3a.config.system.build.sdImage;
         alarmpi-image = self.nixosConfigurations.alarmpi.config.system.build.sdImage;
+        rpi4-1-image = self.nixosConfigurations.rpi4-1.config.system.build.sdImage;
       };
 
     };

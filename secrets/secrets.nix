@@ -7,10 +7,12 @@ let
   nixos-3a = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICqMAA/sZuIG4u5p1GVw9evmXkVerZDv87lM8SK1lGHV";
   alarmpi = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOc81C+BaiHAbMMA0SrFW/L8smbg0m0UIXdmb5/U1hcg";
   k3sserver = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDev89Fy7G4ogUsrdcdI1yxWalJr+XTaF5ncI8c03VX1";
+  rpi4-1 = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJUcl/EHSoytd+D5fhX+/7LshBPTbWN3wwlCcKI/OCD/";
 
   systems = [
     nixos-3a
     alarmpi
+    rpi4-1
   ];
 in
 {
