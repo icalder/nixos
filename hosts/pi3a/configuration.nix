@@ -95,7 +95,6 @@
     extraGroups = [
       "wheel" # Enable ‘sudo’ for the user.
       "plugdev" # USB device access
-      "audio" # Audio device access
       "dialout" # USB serial port access
     ];
     # generate with 'mkpasswd'
@@ -130,8 +129,6 @@
     rtl-sdr-librtlsdr
     dump1090-fa
     fr24feed
-    alsa-utils
-    ffmpeg
   ];
   # Configure nix-direnv globally (system-wide)
   # This section ensures that the direnvrc is configured correctly for *all* users
@@ -145,7 +142,7 @@
     fi
   '';
 
-  services.dump1090-fa.enable = false;
+  services.dump1090-fa.enable = true;
   services.dump1090-fa.extraArgs = [
     "--quiet"
     "--adaptive-range"
@@ -222,7 +219,7 @@
   };
 
   services.fr24feed = {
-    enable = false;
+    enable = true;
     fr24key = config.age.secrets.fr24key.path;
   };
 

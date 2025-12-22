@@ -126,7 +126,7 @@
     fi
   '';
 
-  services.dump1090-fa.enable = true;
+  services.dump1090-fa.enable = false;
   services.dump1090-fa.extraArgs = [
     "--quiet"
     "--adaptive-range"
@@ -136,16 +136,16 @@
     "-2.20132"
   ];
   #services.dump1090-fa.extraArgs = [ "--quiet" "--gain -10" ];
-  systemd.services.dump1090-fa.serviceConfig = {
-    PrivateNetwork = lib.mkForce false;
-    Restart = "always";
-    RestartSec = "5s";
-    # Leave CPU 0 for system interrupts and other critical tasks
-    CPUAffinity = "1 2 3";
-  };
+  # systemd.services.dump1090-fa.serviceConfig = {
+  #   PrivateNetwork = lib.mkForce false;
+  #   Restart = "always";
+  #   RestartSec = "5s";
+  #   # Leave CPU 0 for system interrupts and other critical tasks
+  #   CPUAffinity = "1 2 3";
+  # };
 
   services.nginx = {
-    enable = true;
+    enable = false;
     virtualHosts."default" = {
       listen = [
         {
@@ -186,7 +186,7 @@
 
   systemd.targets.machines.enable = true;
   systemd.nspawn.adsbexchange = {
-    enable = true;
+    enable = false;
     execConfig = {
       Boot = true;
     };
@@ -198,14 +198,14 @@
     };
   };
   systemd.services."systemd-nspawn@adsbexchange" = {
-    enable = true;
+    enable = false;
     wantedBy = [ "machines.target" ];
     # https://mynixos.com/nixpkgs/option/systemd.mounts.*.overrideStrategy
     overrideStrategy = "asDropin";
   };
 
   services.fr24feed = {
-    enable = true;
+    enable = false;
     fr24key = config.age.secrets.fr24key.path;
   };
 
