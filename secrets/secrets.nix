@@ -8,11 +8,13 @@ let
   alarmpi = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOc81C+BaiHAbMMA0SrFW/L8smbg0m0UIXdmb5/U1hcg";
   k3sserver = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDev89Fy7G4ogUsrdcdI1yxWalJr+XTaF5ncI8c03VX1";
   rpi4-1 = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJUcl/EHSoytd+D5fhX+/7LshBPTbWN3wwlCcKI/OCD/";
+  opti = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMUlKBMAI0Cu59JHadTdq5DGMniEvcNlcJho1jHl2ZXH";
 
   systems = [
     nixos-3a
     alarmpi
     rpi4-1
+    opti
   ];
 in
 {
@@ -50,6 +52,7 @@ in
     publicKeys = [
       iain
       k3sserver
+      opti
     ];
     armor = true;
   };

@@ -27,7 +27,12 @@
     itcalde.file = ../../secrets/itcalde.age;
   };
 
-  networking.hostName = "rpi4-1";
+  networking = {
+    hostName = "rpi4-1";
+    hosts = {
+      "192.168.1.48" = [ "opti" ];
+    };
+  };
   time.timeZone = "Europe/London";
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
@@ -81,10 +86,10 @@
   '';
 
   services.k3s = {
-    enable = false;
+    enable = true;
     role = "agent";
     token = "20orchardrd";
-    serverAddr = "https://k3sserver:6443";
+    serverAddr = "https://opti:6443";
   };
   systemd.tmpfiles.rules = [
     "d /data 0755 root root -"

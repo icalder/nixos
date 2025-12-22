@@ -29,9 +29,43 @@
     itcalde.file = ../../secrets/itcalde.age;
   };
 
-  networking.hostName = "opti";
-  time.timeZone = "Europe/London";
+  # DHCP IPV4 options set here to wait for an address before continuing boot
+  # otherwise k3s etcd can fail with IP4/IP6 mismatch
+  networking = {
+    hostName = "opti";
 
+    useNetworkd = true; # Enable systemd-networkd
+    useDHCP = false; # Disable global scripted DHCP
+    dhcpcd.enable = false; # Explicitly turn off dhcpcd
+  };
+
+  systemd.network = {
+    enable = true;
+    networks."10-lan" = {
+      # Matches any ethernet interface (e.g., eno1, enp2s0)
+      matchConfig.Name = "en*";
+
+      networkConfig = {
+        DHCP = "yes"; # Get both IPv4 and IPv6 via DHCP/RA
+        IPv6PrivacyExtensions = "no"; # Keep a stable IPv6 address
+      };
+
+      linkConfig = {
+        RequiredForOnline = "routable";
+        # The "Secret Sauce" for k3s
+        RequiredFamilyForOnline = "ipv4";
+      };
+    };
+  };
+
+  time.timeZone = "Europe/London";
+  i18n.defaultLocale = "en_GB.UTF-8";
+  console.keyMap = "uk";
+  # Configure keymap for X11 (and Wayland/WLM usually inherit this)
+  # services.xserver.xkb.layout = "gb";
+
+  # Means users cannot be added or removed using 'useradd' or 'userdel', passwords are managed via agenix only
+  users.mutableUsers = false;
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.itcalde = {
     isNormalUser = true;
@@ -82,21 +116,26 @@
     fi
   '';
 
+  # Force k3s to respect the network-online target
+  systemd.services.k3s = {
+    wants = [ "network-online.target" ];
+    after = [ "network-online.target" ];
+  };
   services.k3s = {
     enable = true;
     role = "server";
     token = "20orchardrd";
     clusterInit = true;
     extraFlags = toString [
+      "--flannel-iface=enp1s0" # Bind to the physical link, not an IP
+      "--node-name=opti" # Explicitly pin the name
+      "--kubelet-arg=node-ip=0.0.0.0" # Tell kubelet to be IP-agnostic
       "--write-kubeconfig-mode 644"
       "--default-local-storage-path /data"
       "--node-label \"nats-host=true\""
       "--node-label \"postgresql-host=true\""
     ];
   };
-  systemd.tmpfiles.rules = [
-    "d /data 0755 root root -"
-  ];
 
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;

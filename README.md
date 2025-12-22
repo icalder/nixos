@@ -213,6 +213,7 @@ Updates to the VM configuration, and rebuilds, can be done remotely with ssh acc
   # Build your new configuration from your flake and deploy it to the PI
   nixos-rebuild switch --flake .#pi3a --sudo --target-host itcalde@nixos-3a
   nixos-rebuild switch --flake .#alarmpi --sudo --target-host itcalde@alarmpi
+  nixos-rebuild switch --flake .#opti --sudo --target-host itcalde@opti
   nixos-rebuild switch --flake .#rpi4-1 --sudo --target-host itcalde@rpi4-1
   ```
 
