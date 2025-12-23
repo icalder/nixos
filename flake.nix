@@ -16,6 +16,7 @@
     };
     #hello-world-server.url = "git+file:///home/itcalde/rust/hello-world-server";
     hello-world-server.url = "github:icalder/hello-world-server";
+    ubc125.url = "github:icalder/ubc125";
     fr24feed = {
       url = "path:packages/fr24feed";
       # # url = "github:your-username/fr24feed-flake";
@@ -36,6 +37,7 @@
       agenix,
       home-manager,
       hello-world-server,
+      ubc125,
       fr24feed,
       adsbexchange,
       ...
@@ -54,6 +56,7 @@
             self.overlays.hello
             self.overlays.goodbye
             self.overlays.hello-world-server
+            self.overlays.ubc125
             fr24feed.overlays.default
             adsbexchange.overlays.default
           ];
@@ -153,6 +156,9 @@
       overlays.hello-world-server = final: prev: {
         hello-world-server =
           hello-world-server.packages.${prev.stdenv.hostPlatform.system}.hello-world-server;
+      };
+      overlays.ubc125 = final: prev: {
+        ubc125 = ubc125.packages.${prev.stdenv.hostPlatform.system}.ubc125;
       };
 
       # NB ".nixos" here is hostname

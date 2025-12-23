@@ -113,6 +113,7 @@
     fr24feed
     alsa-utils
     ffmpeg
+    ubc125
   ];
   # Configure nix-direnv globally (system-wide)
   # This section ensures that the direnvrc is configured correctly for *all* users
