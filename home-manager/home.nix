@@ -34,7 +34,7 @@ in
 
   # The home.packages option allows you to install Nix packages into your
   # environment.
-  home.packages = [
+  home.packages = with pkgs; [
     # # Adds the 'hello' command to your environment. It prints a friendly
     # # "Hello, world!" when run.
     # pkgs.hello
@@ -53,15 +53,16 @@ in
     # '')
 
     # LSP server
-    pkgs.nil
-    pkgs.nixfmt-rfc-style
+    nil
+    nixfmt-rfc-style
     # Include nodejs by default as it's required by many agents and tools
-    pkgs.nodejs
+    nodejs
     # Required for paplay
-    pkgs.pulseaudio
-    pkgs.file
-    pkgs.skopeo
-    pkgs.agenix
+    pulseaudio
+    file
+    skopeo
+    agenix
+    kubectl
   ];
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
