@@ -356,11 +356,11 @@
         "rust-overlay": "rust-overlay_2"
       },
       "locked": {
-        "lastModified": 1766504148,
-        "narHash": "sha256-ym6jrrngWuq6ynh/IrZkC3cFIR31QKjSXu0Jf0gfBvg=",
+        "lastModified": 1766528292,
+        "narHash": "sha256-nFR+t7dQvGDz9u65vPgJVPrFX2cn+6lnek9qNKneEe0=",
         "owner": "icalder",
         "repo": "ubc125",
-        "rev": "04b7b27553c8bb422f40eaff0cf97c58e5e8854d",
+        "rev": "15da318997e5c5902ab75f6840bccaa0607a3836",
         "type": "github"
       },
       "original": {
