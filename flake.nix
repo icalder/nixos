@@ -130,6 +130,7 @@
                 ];
               }
               agenix.nixosModules.default
+              ./modules/autoupgrade.nix
             ];
           };
 
@@ -253,6 +254,7 @@
           agenix.nixosModules.default
           ./hosts/opti/configuration.nix
           ./hosts/opti/changeip-update.nix
+          ./modules/autoupgrade.nix
         ];
       };
 
