@@ -258,10 +258,10 @@
         ];
       };
 
-      nixosConfigurations.pi3a = mkPiSystem {
+      nixosConfigurations.nixos-3a = mkPiSystem {
         modules = [
           fr24feed.nixosModules.fr24feed
-          ./hosts/pi3a/configuration.nix
+          ./hosts/nixos-3a/configuration.nix
         ];
       };
 
@@ -275,6 +275,7 @@
       nixosConfigurations.rpi4-1 = mkPiSystem {
         modules = [
           ./hosts/rpi4-1/configuration.nix
+          ./modules/autoupgrade.nix
         ];
       };
 
@@ -293,7 +294,7 @@
         hyperv-image = self.nixosConfigurations.hyperv-vm.config.system.build.image;
         k3s-server-image = self.nixosConfigurations.k3s-server.config.system.build.image;
         k3s-agent-image = self.nixosConfigurations.k3s-agent.config.system.build.image;
-        pi3a-image = self.nixosConfigurations.pi3a.config.system.build.sdImage;
+        nixos-3a-image = self.nixosConfigurations.nixos-3a.config.system.build.sdImage;
         alarmpi-image = self.nixosConfigurations.alarmpi.config.system.build.sdImage;
         rpi4-1-image = self.nixosConfigurations.rpi4-1.config.system.build.sdImage;
       };

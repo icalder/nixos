@@ -10,4 +10,10 @@
     ];
     allowReboot = true; # Optional: reboot for kernel updates
   };
+
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 14d"; # Deletes generations older than 2 weeks
+  };
 }
