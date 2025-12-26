@@ -76,7 +76,12 @@
 
       # Function to generate Hyper-V VM configuration
       mkHypervVm = import ./lib/mkHypervVm.nix {
-        inherit nixpkgs system pkgs unstable-pkgs;
+        inherit
+          nixpkgs
+          system
+          pkgs
+          unstable-pkgs
+          ;
       };
 
       # Function to generate Raspberry Pi (aarch64) system configuration
@@ -217,7 +222,6 @@
       nixosConfigurations.rpi4-1 = mkPiSystem {
         modules = [
           ./hosts/rpi4-1/configuration.nix
-          ./modules/autoupgrade.nix
         ];
       };
 
