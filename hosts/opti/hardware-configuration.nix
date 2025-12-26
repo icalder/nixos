@@ -14,6 +14,10 @@
     (modulesPath + "/installer/scan/not-detected.nix")
   ];
 
+  boot.kernelParams = [
+    "rootdelay=1"
+    "usb-storage.quirks=0bda:9210:t" # Workaround for Realtek RTS9210 USB to SATA bridge freezing
+  ];
   boot.initrd.availableKernelModules = [
     "xhci_pci"
     "nvme"
@@ -35,15 +39,14 @@
     device = "/dev/disk/by-uuid/629E-0510";
     fsType = "vfat";
     options = [
-      "fmask=0022"
-      "dmask=0022"
+      "fmask=0077"
+      "dmask=0077" # 777 - 077 = 700	rwx------	Only root can read, write, or execute.
     ];
   };
 
   fileSystems."/data" = {
     device = "/dev/disk/by-uuid/c1258554-a703-4990-9747-ce5a9f8bbbed";
     fsType = "btrfs";
-    options = [ "nofail" ];
   };
 
   swapDevices = [ ];
