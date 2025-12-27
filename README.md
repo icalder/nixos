@@ -54,6 +54,8 @@ home-manager expire-generations "-1 day"
 ```bash
 systemctl status nixos-upgrade
 journalctl -u nixos-upgrade
+journalctl --list-boots
+journalctl -b -1
 journalctl -u nixos-upgrade.timer
 ```
 
