@@ -40,30 +40,7 @@
     pkgs.docker-compose # This is V2 (the Go version) - podman needs it in PATH
     hello-script
     goodbye-script
-    hello-world-server
   ];
-
-  systemd.services.hello-world-server = {
-    description = "Hello World Server";
-    enable = false;
-
-    # This ensures the service is started at boot
-    wantedBy = [ "multi-user.target" ];
-    after = [ "network.target" ];
-
-    # Configuration for the service itself
-    serviceConfig = {
-      # It's good practice to run services as a non-privileged user
-      User = "itcalde";
-
-      # The command to start the service.
-      ExecStart = "${pkgs.hello-world-server}/bin/hello-world-server";
-
-      # Automatically restart the service if it fails
-      Restart = "on-failure";
-      RestartSec = "5s";
-    };
-  };
 
   programs.git.enable = true;
   # VSCode remoting requires dynamic linking to ld-linux

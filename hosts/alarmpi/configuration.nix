@@ -127,6 +127,31 @@
     fi
   '';
 
+  # This is a test of packaging a running a completely custom system service.
+  # It listens on port 3000 and responds with "Hello, World!" to any HTTP request.
+  # It can be tested by running `curl http://localhost:3000/` after starting the service.
+  systemd.services.hello-world-server = {
+    description = "Hello World Server";
+    enable = true;
+
+    # This ensures the service is started at boot
+    wantedBy = [ "multi-user.target" ];
+    after = [ "network.target" ];
+
+    # Configuration for the service itself
+    serviceConfig = {
+      # It's good practice to run services as a non-privileged user
+      User = "itcalde";
+
+      # The command to start the service.
+      ExecStart = "${pkgs.hello-world-server}/bin/hello-world-server";
+
+      # Automatically restart the service if it fails
+      Restart = "on-failure";
+      RestartSec = "5s";
+    };
+  };
+
   services.dump1090-fa.enable = false;
   services.dump1090-fa.extraArgs = [
     "--quiet"
