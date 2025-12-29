@@ -48,6 +48,7 @@
 
   users.users.itcalde = {
     isNormalUser = true;
+    uid = 1001;
     home = "/home/itcalde";
     description = "Iain Calder";
     extraGroups = [
