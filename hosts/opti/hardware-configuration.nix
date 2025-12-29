@@ -14,10 +14,6 @@
     (modulesPath + "/installer/scan/not-detected.nix")
   ];
 
-  boot.kernelParams = [
-    "rootdelay=1"
-    "usb-storage.quirks=0bda:9210:t" # Workaround for Realtek RTS9210 USB to SATA bridge freezing
-  ];
   boot.initrd.availableKernelModules = [
     "xhci_pci"
     "nvme"
