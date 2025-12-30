@@ -22,13 +22,32 @@
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "24.11"; # Did you read the comment?
 
+  wsl.useWindowsDriver = true;
+  hardware.graphics.enable = true;
+
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
+
+  services.dbus.enable = true;
+  services.ollama.enable = true;
+  services.ollama.acceleration = "cuda";
+
+  services.open-webui = {
+    enable = true;
+    port = 8800;
+  };
 
   virtualisation.docker.enable = true;
   virtualisation.podman = {
     enable = true;
     # Ensure containers can talk to each other via DNS (essential for Compose)
     defaultNetwork.settings.dns_enabled = true;
+  };
+
+  environment.sessionVariables = {
+    LD_LIBRARY_PATH = [
+      # https://yomaq.github.io/posts/nvidia-on-nixos-wsl-ollama-up-24-7-on-your-gaming-pc/
+      "/usr/lib/wsl/lib"
+    ];
   };
 
   environment.systemPackages = with pkgs; [

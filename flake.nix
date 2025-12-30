@@ -1,6 +1,16 @@
 {
   description = "NixOS and Home Manager configurations";
 
+  nixConfig = {
+    extra-substituters = [
+      "https://cuda-maintainers.cachix.org/"
+    ];
+
+    extra-trusted-public-keys = [
+      "cuda-maintainers.cachix.org-1:0dq3bujKpuEPMCX6U4WylrUDZ9JyUG0VpVZa7CNfq5E="
+    ];
+  };
+
   inputs = {
     # NixOS official package source, using the nixos-25.11 branch here
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
@@ -47,6 +57,17 @@
       system-aarch64 = "aarch64-linux";
       localConfig = /. + "/home/itcalde/nixos/local/configuration.nix";
 
+      allowUnfreePredicate =
+        pkg:
+        builtins.elem (nixpkgs.lib.getName pkg) [
+          "nvidia-driver"
+          "cuda_cudart"
+          "cuda_nvcc"
+          "cuda_cccl"
+          "libcublas"
+          "open-webui"
+        ];
+
       # Helper to generate package sets for different systems
       mkPkgs =
         system: config:
@@ -64,11 +85,13 @@
           inherit config;
         };
 
-      pkgs = mkPkgs system { };
+      pkgs = mkPkgs system { inherit allowUnfreePredicate; };
 
       unstable-pkgs = import nixpkgs-unstable {
         inherit system;
-        config = { };
+        config = {
+          inherit allowUnfreePredicate;
+        };
       };
 
       pkgs-aarch64 = mkPkgs system-aarch64 {
@@ -129,7 +152,7 @@
           # so the old configuration file still takes effect
           ./hosts/wsl/configuration.nix
           # machine specific local configuration overrides
-          (if builtins.pathExists localConfig then localConfig else {})
+          (if builtins.pathExists localConfig then localConfig else { })
           nixos-wsl.nixosModules.default
           {
             wsl.enable = true;
