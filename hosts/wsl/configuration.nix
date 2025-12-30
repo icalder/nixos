@@ -28,8 +28,13 @@
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
 
   services.dbus.enable = true;
-  services.ollama.enable = true;
-  services.ollama.acceleration = "cuda";
+  services.ollama = {
+    enable = true;
+    acceleration = "cuda";
+    environmentVariables = {
+      OLLAMA_CONTEXT_LENGTH = "16384";
+    };
+  };
 
   services.open-webui = {
     enable = true;
