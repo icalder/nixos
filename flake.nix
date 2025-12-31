@@ -55,7 +55,6 @@
     let
       system = "x86_64-linux";
       system-aarch64 = "aarch64-linux";
-      localConfig = /. + "/home/itcalde/nixos/local/configuration.nix";
 
       allowUnfreePredicate =
         pkg:
@@ -151,8 +150,6 @@
           # Import the previous configuration.nix we used,
           # so the old configuration file still takes effect
           ./hosts/wsl/configuration.nix
-          # machine specific local configuration overrides
-          (if builtins.pathExists localConfig then localConfig else { })
           nixos-wsl.nixosModules.default
           {
             wsl.enable = true;
