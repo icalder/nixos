@@ -27,7 +27,6 @@
 
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
 
-  services.dbus.enable = true;
   services.ollama = {
     enable = true;
     acceleration = "cuda";
