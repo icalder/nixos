@@ -49,7 +49,17 @@ home-manager switch –rollback
 home-manager expire-generations "-1 day"
 ```
 
-## Automatic Upgrades
+## Packages
+
+### SectorFlux
+
+This is a debugging proxy for local LLM agents.  [SectorFlux](https://github.com/particlesector/SectorFlux).
+
+```bash
+nix run /home/itcalde/nixos/packages/sectorflux
+```
+
+## NixOS Automatic Upgrades
 
 ```bash
 systemctl status nixos-upgrade
@@ -59,7 +69,7 @@ journalctl -b -1
 journalctl -u nixos-upgrade.timer
 ```
 
-## Useful commands
+## NixOS Useful commands
 
 `nix-store --query --requisites /run/current-system`
 

@@ -38,6 +38,10 @@
   services.open-webui = {
     enable = true;
     port = 8800;
+    # Add pydantic to Open-WebUI's environment - some tools require it
+    package = pkgs.open-webui.overrideAttrs (old: {
+      propagatedBuildInputs = old.propagatedBuildInputs ++ (with pkgs.python3Packages; [ pydantic ]);
+    });
   };
 
   virtualisation.docker.enable = true;
