@@ -22,6 +22,8 @@
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "24.11"; # Did you read the comment?
 
+  services.dbus.enable = true;
+
   wsl.useWindowsDriver = true;
   hardware.graphics.enable = true;
 
@@ -74,6 +76,7 @@
   programs.nix-ld.enable = true;
 
   users.users.itcalde = {
+    linger = true;
     isNormalUser = true;
     uid = 1001;
     home = "/home/itcalde";
