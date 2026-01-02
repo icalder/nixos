@@ -29,10 +29,11 @@
 
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
 
+  disabledModules = [ "services/misc/ollama.nix" ];
+  imports = [ "${unstable-pkgs.path}/nixos/modules/services/misc/ollama.nix" ];
   services.ollama = {
     enable = true;
-    package = unstable-pkgs.ollama;
-    acceleration = "cuda";
+    package = unstable-pkgs.ollama-cuda;
     environmentVariables = {
       OLLAMA_CONTEXT_LENGTH = "16384";
     };
