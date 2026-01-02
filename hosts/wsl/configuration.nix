@@ -31,6 +31,7 @@
 
   services.ollama = {
     enable = true;
+    package = unstable-pkgs.ollama;
     acceleration = "cuda";
     environmentVariables = {
       OLLAMA_CONTEXT_LENGTH = "16384";
