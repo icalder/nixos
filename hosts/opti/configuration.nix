@@ -6,11 +6,15 @@
   config,
   lib,
   pkgs,
+  unstable-pkgs,
   ...
 }:
 
 {
-  imports = [ ./hardware-configuration.nix ];
+  imports = [
+    ./hardware-configuration.nix
+    "${unstable-pkgs.path}/nixos/modules/services/misc/ollama.nix"
+  ];
 
   # Enable zRAM swap
   zramSwap = {
@@ -24,6 +28,23 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.supportedFilesystems = [ "nfs" ];
+  # Enable Intel GPU firmware loading for extra video acceleration
+  boot.kernelParams = [ "i915.enable_guc=3" ];
+
+  hardware.graphics = {
+    enable = true;
+    extraPackages = with pkgs; [
+      intel-media-driver # Hardware video acceleration
+      vulkan-loader
+      vulkan-validation-layers
+    ];
+  };
+
+  disabledModules = [ "services/misc/ollama.nix" ];
+  services.ollama = {
+    enable = true;
+    package = unstable-pkgs.ollama-vulkan;
+  };
 
   age.secrets = {
     itcalde.file = ../../secrets/itcalde.age;
@@ -103,6 +124,7 @@
   environment.systemPackages = with pkgs; [
     vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     wget
+    intel-gpu-tools # Includes intel_gpu_top to monitor usage
   ];
   # Configure nix-direnv globally (system-wide)
   # This section ensures that the direnvrc is configured correctly for *all* users
