@@ -7,6 +7,7 @@
     randomizedDelaySec = "45min"; # Avoid all Pis hitting GitHub at once
     flags = [
       "--refresh" # Force fetching latest flake info
+      "--accept-flake-config" # Accept configuration from the flake, e.g. substituters
     ];
     allowReboot = true; # Optional: reboot for kernel updates
   };

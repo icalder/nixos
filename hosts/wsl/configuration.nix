@@ -91,4 +91,10 @@
     ];
     # openssh.authorizedKeys.keys  = [ "ssh-dss AAAAB3Nza... alice@foobar" ];
   };
+
+  # this avoids warnings about flake configuration options like substituters
+  nix.settings.trusted-users = [
+    "root"
+    "itcalde"
+  ];
 }
