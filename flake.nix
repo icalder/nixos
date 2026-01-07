@@ -220,6 +220,9 @@
               "nix-command"
               "flakes"
             ];
+            boot.kernel.sysctl = {
+              "kernel.dmesg_restrict" = 0;
+            };
           }
           agenix.nixosModules.default
           ./hosts/opti/configuration.nix

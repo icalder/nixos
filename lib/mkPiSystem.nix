@@ -1,4 +1,10 @@
-{ nixpkgs, system, pkgs, unstable-pkgs, agenix }:
+{
+  nixpkgs,
+  system,
+  pkgs,
+  unstable-pkgs,
+  agenix,
+}:
 extraArgs:
 let
   baseArgs = {
@@ -17,6 +23,9 @@ let
           "nix-command"
           "flakes"
         ];
+        boot.kernel.sysctl = {
+          "kernel.dmesg_restrict" = 0;
+        };
       }
       agenix.nixosModules.default
       ../modules/autoupgrade.nix
