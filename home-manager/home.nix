@@ -130,6 +130,7 @@ in
     # directory where you store your own scripts, you can add it like this:
     # "${config.home.homeDirectory}/bin"
     "${config.home.homeDirectory}/.npm-global/bin"
+    "${config.home.homeDirectory}/.cargo/bin"
   ];
 
   # Let Home Manager install and manage itself.
