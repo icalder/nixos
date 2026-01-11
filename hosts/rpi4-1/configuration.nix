@@ -90,6 +90,13 @@
     role = "agent";
     token = "20orchardrd";
     serverAddr = "https://opti:6443";
+    extraFlags = toString [
+      "--flannel-iface=end0" # Bind to the physical link, not an IP
+      "--node-name=rpi4-1"
+      "--kubelet-arg=node-ip=0.0.0.0" # Forces prioritization of IPv4
+      # OR, better yet, use the actual static IP of the Pi:
+      # "--node-ip=192.168.1.x"
+    ];
   };
   systemd.tmpfiles.rules = [
     "d /data 0755 root root -"
