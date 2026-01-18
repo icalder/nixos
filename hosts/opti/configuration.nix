@@ -29,7 +29,10 @@
   boot.loader.efi.canTouchEfiVariables = true;
   boot.supportedFilesystems = [ "nfs" ];
   # Enable Intel GPU firmware loading for extra video acceleration
-  boot.kernelParams = [ "i915.enable_guc=3" ];
+  boot.kernelParams = [
+    "i915.enable_guc=3"
+    "reboot=pci"
+  ];
 
   hardware.graphics = {
     enable = true;
