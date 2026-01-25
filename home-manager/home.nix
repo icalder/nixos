@@ -64,6 +64,7 @@ in
     agenix
     kubectl
     psmisc
+    wslu # NixOS WSL utilities, e.g. wslview
   ];
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
