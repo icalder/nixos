@@ -121,7 +121,7 @@ in
   #  /etc/profiles/per-user/itcalde/etc/profile.d/hm-session-vars.sh
   #
   home.sessionVariables = {
-    # EDITOR = "emacs";
+    EDITOR = "vim";
     # Silences the "Executing external compose provider" warning
     PODMAN_COMPOSE_WARNING_LOGS = "0";
   };
