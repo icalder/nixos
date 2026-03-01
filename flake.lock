@@ -93,6 +93,22 @@
       },
       "parent": []
     },
+    "goose": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "path": "packages/goose",
+        "type": "path"
+      },
+      "original": {
+        "path": "packages/goose",
+        "type": "path"
+      },
+      "parent": []
+    },
     "hello-world-server": {
       "inputs": {
         "nixpkgs": "nixpkgs",
@@ -151,6 +167,21 @@
         "owner": "nix-community",
         "ref": "release-25.11",
         "repo": "home-manager",
+        "type": "github"
+      }
+    },
+    "nix-flatpak": {
+      "locked": {
+        "lastModified": 1768656715,
+        "narHash": "sha256-Sbh037scxKFm7xL0ahgSCw+X2/5ZKeOwI2clqrYr9j4=",
+        "owner": "gmodena",
+        "repo": "nix-flatpak",
+        "rev": "123fe29340a5b8671367055b75a6e7c320d6f89a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "gmodena",
+        "repo": "nix-flatpak",
         "type": "github"
       }
     },
@@ -291,8 +322,10 @@
         "adsbexchange": "adsbexchange",
         "agenix": "agenix",
         "fr24feed": "fr24feed",
+        "goose": "goose",
         "hello-world-server": "hello-world-server",
         "home-manager": "home-manager_2",
+        "nix-flatpak": "nix-flatpak",
         "nixos-wsl": "nixos-wsl",
         "nixpkgs": "nixpkgs_4",
         "nixpkgs-unstable": "nixpkgs-unstable",

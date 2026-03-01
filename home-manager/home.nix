@@ -65,6 +65,7 @@ in
     kubectl
     psmisc
     wslu # NixOS WSL utilities, e.g. wslview
+    goose-cli
   ];
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
@@ -150,6 +151,7 @@ in
       # https://nix.dev/tutorials/nix-language.html
       # https://nixos.org/guides/nix-pills/04-basics-of-language.html
       gsudo = "sudo git -c \"include.path=${config-dir}/git/config\" -c \"include.path=${builtins.getEnv ("HOME")}/.gitconfig\"";
+      goose-desktop = "flatpak run io.github.block.Goose";
       #   ll = "ls -l";
       #   la = "ls -la";
       #   l = "ls -CF";
@@ -161,6 +163,8 @@ in
           GIT_PROMPT_ONLY_IN_REPO=1
           source "$HOME/.bash-git-prompt/gitprompt.sh"
       fi
+
+      eval "$(goose term init bash)"
     '';
   };
 
@@ -181,6 +185,25 @@ in
 
   services.ssh-agent.enable = true;
   services.podman.enable = true;
+
+  services.flatpak.enable = true;
+  # Note: If this is a fresh install and flatpak commands fail with "/var/lib/flatpak/repo: No such file or directory",
+  # you may need to manually initialize the system repo once with:
+  # sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+  services.flatpak.packages = [
+    {
+      appId = "io.github.block.Goose";
+      # Fetch the bundle directly from the GitHub release
+      # To run: flatpak run io.github.block.Goose
+      # Private home (settings/logs): ~/.var/app/io.github.block.Goose/
+      sha256 = "1d2qvg2jrb8544ivfbgffbqljw2klky5lvj7ci5m1il427jimqbz";
+      bundle = "${pkgs.fetchurl {
+        url = "https://github.com/block/goose/releases/download/v1.26.1/io.github.block.Goose_stable_x86_64.flatpak";
+        # To get the SRI hash: nix-prefetch-url https://github.com/block/goose/releases/download/v1.26.1/io.github.block.Goose_stable_x86_64.flatpak | xargs nix-hash --to-sri --type sha256
+        hash = "sha256-f+Ea5RGExlBLZEduWvykU3BJ8XLuLbcjIQWtLMXbWLQ=";
+      }}";
+    }
+  ];
 
   home.activation = {
 

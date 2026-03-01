@@ -24,6 +24,7 @@
       url = "github:nix-community/home-manager/release-25.11";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nix-flatpak.url = "github:gmodena/nix-flatpak";
     #hello-world-server.url = "git+file:///home/itcalde/rust/hello-world-server";
     hello-world-server.url = "github:icalder/hello-world-server";
     ubc125.url = "github:icalder/ubc125";
@@ -36,6 +37,10 @@
       url = "path:packages/adsbexchange";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    goose = {
+      url = "path:packages/goose";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -46,10 +51,12 @@
       nixos-wsl,
       agenix,
       home-manager,
+      nix-flatpak,
       hello-world-server,
       ubc125,
       fr24feed,
       adsbexchange,
+      goose,
       ...
     }@inputs:
     let
@@ -80,6 +87,7 @@
             self.overlays.ubc125
             fr24feed.overlays.default
             adsbexchange.overlays.default
+            goose.overlays.default
           ];
           inherit config;
         };
@@ -259,7 +267,10 @@
           inherit unstable-pkgs;
         };
         # The path to your home.nix is now relative to the root flake.
-        modules = [ ./home-manager/home.nix ];
+        modules = [
+          nix-flatpak.homeManagerModules.nix-flatpak
+          ./home-manager/home.nix
+        ];
       };
 
       packages.${system} = {
