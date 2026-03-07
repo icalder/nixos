@@ -35,7 +35,7 @@
     enable = true;
     package = unstable-pkgs.ollama-cuda;
     environmentVariables = {
-      OLLAMA_CONTEXT_LENGTH = "16384";
+      OLLAMA_CONTEXT_LENGTH = "32768";
     };
   };
 
