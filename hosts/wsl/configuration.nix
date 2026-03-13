@@ -78,6 +78,17 @@
     goodbye-script
   ];
 
+  # required for example for esp32-rs to sandbox the pre-built rustc/rustdoc binaries
+  security.wrappers = {
+    # Low-level unprivileged sandboxing tool, see <https://github.com/containers/bubblewrap>.
+    bwrap = {
+      owner = "root";
+      group = "root";
+      source = "${pkgs.bubblewrap}/bin/bwrap";
+      setuid = true;
+    };
+  };
+
   programs.git.enable = true;
   # VSCode remoting requires dynamic linking to ld-linux
   programs.nix-ld.enable = true;
