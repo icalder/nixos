@@ -71,7 +71,6 @@
           "cuda_nvcc"
           "cuda_cccl"
           "libcublas"
-          "open-webui"
         ];
 
       # Helper to generate package sets for different systems
