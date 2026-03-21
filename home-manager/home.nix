@@ -186,25 +186,6 @@ in
   services.ssh-agent.enable = true;
   services.podman.enable = true;
 
-  services.flatpak.enable = true;
-  # Note: If this is a fresh install and flatpak commands fail with "/var/lib/flatpak/repo: No such file or directory",
-  # you may need to manually initialize the system repo once with:
-  # sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-  services.flatpak.packages = [
-    {
-      appId = "io.github.block.Goose";
-      # Fetch the bundle directly from the GitHub release
-      # To run: flatpak run io.github.block.Goose
-      # Private home (settings/logs): ~/.var/app/io.github.block.Goose/
-      sha256 = "13cz771pnqgrirs5flsc0pkyzgjpzhfvhjdzvfa1424a5v2xaddd";
-      bundle = "${pkgs.fetchurl {
-        url = "https://github.com/block/goose/releases/download/v1.27.1/io.github.block.Goose_stable_x86_64.flatpak";
-        # To get the SRI hash: nix-prefetch-url https://github.com/block/goose/releases/download/v1.27.1/io.github.block.Goose_stable_x86_64.flatpak | xargs nix-hash --to-sri --type sha256
-        hash = "sha256-rTXVxS6KCBKU279JuB38V77v5wVMU1d0jvlhe8M5n40=";
-      }}";
-    }
-  ];
-
   home.activation = {
 
   };

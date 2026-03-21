@@ -89,6 +89,54 @@ echo "Curl store path: $curl_store_path"
 nix why-depends /run/current-system "$curl_store_path"
 ```
 
+## Flatpaks
+
+Cleanup
+
+```bash
+flatpak uninstall --all
+flatpak uninstall --unused
+rm -rf ~/.var/app/*
+rm -rf ~/.local/share/flatpak/*
+sudo rm -rf /var/lib/flatpak/*
+```
+
+XDG Path Hacks for Goose Desktop
+
+```bash
+#!/bin/sh
+if [ "$1" = "get" ]; then
+    echo "google-chrome.desktop" # Lie to the app so it thinks a browser exists
+else
+    wslview "$@"
+fi
+```
+
+```bash
+flatpak override --user --reset io.github.block.Goose
+mkdir -p ~/.local/share/flatpak-bin
+mv ~/bin/xdg-settings ~/.local/share/flatpak-bin/xdg-settings
+chmod +x ~/.local/share/flatpak-bin/xdg-settings
+ln -s ~/.local/share/flatpak-bin/xdg-settings ~/.local/share/flatpak-bin/xdg-open
+flatpak override --user --filesystem=~/.local/share/flatpak-bin:ro io.github.block.Goose
+flatpak override --user --env=PATH=/home/itcalde/.local/share/flatpak-bin:/app/bin:/usr/bin io.github.block.Goose
+flatpak override --user --talk-name=org.freedesktop.portal.Flatpak io.github.block.Goose
+
+# symlink goose-cli config for the flatpak app to use
+rm -rf ~/.var/app/io.github.block.Goose/config/goose
+ln -s ~/.config/goose ~/.var/app/io.github.block.Goose/config/goose
+```
+
+```bash
+flatpak list
+flatpak remote-ls
+flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+flatpak update
+curl -L -o goose.flatpak https://github.com/block/goose/releases/download/v1.28.0/io.github.block.Goose_stable_x86_64.flatpak && flatpak install --user -y ./goose.flatpak; rm goose.flatpak
+flatpak info --show-permissions io.github.block.Goose
+flatpak run io.github.block.Goose
+```
+
 ## Virtual Machine Builds
 
 This project supports building virtual machine images for different virtualization platforms.

@@ -59,6 +59,7 @@
   };
 
   environment.systemPackages = with pkgs; [
+    xdg-utils
     vim
     wget
     nixfmt-rfc-style

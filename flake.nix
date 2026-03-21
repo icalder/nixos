@@ -24,7 +24,6 @@
       url = "github:nix-community/home-manager/release-25.11";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nix-flatpak.url = "github:gmodena/nix-flatpak";
     #hello-world-server.url = "git+file:///home/itcalde/rust/hello-world-server";
     hello-world-server.url = "github:icalder/hello-world-server";
     ubc125.url = "github:icalder/ubc125";
@@ -51,7 +50,6 @@
       nixos-wsl,
       agenix,
       home-manager,
-      nix-flatpak,
       hello-world-server,
       ubc125,
       fr24feed,
@@ -265,9 +263,9 @@
         extraSpecialArgs = {
           inherit unstable-pkgs;
         };
+
         # The path to your home.nix is now relative to the root flake.
         modules = [
-          nix-flatpak.homeManagerModules.nix-flatpak
           ./home-manager/home.nix
         ];
       };
