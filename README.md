@@ -132,7 +132,7 @@ flatpak list
 flatpak remote-ls
 flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 flatpak update
-curl -L -o goose.flatpak https://github.com/block/goose/releases/download/v1.28.0/io.github.block.Goose_stable_x86_64.flatpak && flatpak install --user -y ./goose.flatpak; rm goose.flatpak
+curl -L -o goose.flatpak https://github.com/block/goose/releases/download/v1.29.0/io.github.block.Goose_stable_x86_64.flatpak && flatpak install --user -y ./goose.flatpak; rm goose.flatpak
 flatpak info --show-permissions io.github.block.Goose
 flatpak run io.github.block.Goose
 ```
