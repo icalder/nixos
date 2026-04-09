@@ -38,16 +38,16 @@
           };
         in
         pkgs.goose-cli.overrideAttrs (oldAttrs: rec {
-          version = "1.29.0";
+          version = "1.30.0";
           src = pkgs.fetchFromGitHub {
             owner = "block";
             repo = "goose";
             tag = "v${version}";
-            hash = "sha256-CqNITxafZBT230ETC4nxNEP+cvH8R9aCobcuCDP+IHU=";
+            hash = "sha256-cKp7IN4nIACN75XWymZy0a07hdRy5xgkozErcJHcfFs=";
           };
           cargoDeps = pkgs.rustPlatform.fetchCargoVendor {
             inherit src;
-            hash = "sha256-RUWvbV+/LVSyiHJ/2pseuAP8Nobjr8dMrictDlNgl0c=";
+            hash = "sha256-066075A9JUqE2Nes+AYDHl4u4KRJxcPGSiKGoPNmdqs=";
           };
           nativeBuildInputs = (oldAttrs.nativeBuildInputs or [ ]) ++ [
             pkgs.rustPlatform.bindgenHook
