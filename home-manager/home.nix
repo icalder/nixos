@@ -66,6 +66,7 @@ in
     psmisc
     wslu # NixOS WSL utilities, e.g. wslview
     goose-cli
+    jq
   ];
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
