@@ -1,5 +1,5 @@
 {
-  description = "Goose CLI v1.32.0";
+  description = "Goose CLI v1.33.1";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -38,16 +38,16 @@
           };
         in
         pkgs.goose-cli.overrideAttrs (oldAttrs: rec {
-          version = "1.32.0";
+          version = "1.33.1";
           src = pkgs.fetchFromGitHub {
             owner = "block";
             repo = "goose";
             tag = "v${version}";
-            hash = "sha256-n0u98JY10klMqvPALNxifnHQJWqaTBfKEIZrWfZAVSY=";
+            hash = "sha256-FBICGOfVs2jbOdLWSInqfTYBdnCcbcGWHwqY/b6v8eg=";
           };
           cargoDeps = pkgs.rustPlatform.fetchCargoVendor {
             inherit src;
-            hash = "sha256-lHxDu6nu1u7CE6xrowhjB1KM/2///whmKltCywdj+SA=";
+            hash = "sha256-fN0FKDYFkZrQQPWdUlemOaGzIAZhqFyskz9TEmG+X4o=";
           };
           nativeBuildInputs = (oldAttrs.nativeBuildInputs or [ ]) ++ [
             pkgs.rustPlatform.bindgenHook
