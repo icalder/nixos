@@ -13,6 +13,15 @@
   ...
 }:
 
+let
+  llama-cpp-cuda = unstable-pkgs.llama-cpp.override {
+    blasSupport = true;
+    cudaSupport = true;
+    rocmSupport = false;
+    metalSupport = false;
+  };
+  modelDir = "/var/lib/llama-models";
+in
 {
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
@@ -32,10 +41,46 @@
   disabledModules = [ "services/misc/ollama.nix" ];
   imports = [ "${unstable-pkgs.path}/nixos/modules/services/misc/ollama.nix" ];
   services.ollama = {
-    enable = true;
+    enable = false;
     package = unstable-pkgs.ollama-cuda;
     environmentVariables = {
       OLLAMA_CONTEXT_LENGTH = "32768";
+    };
+  };
+
+  systemd.tmpfiles.rules = [
+    "d ${modelDir} 0755 root root -"
+  ];
+
+  systemd.services.llama-swap = {
+    serviceConfig.ReadOnlyPaths = [
+      modelDir
+      "/usr/lib/wsl/lib"
+    ];
+    environment.LD_LIBRARY_PATH = "/usr/lib/wsl/lib";
+  };
+
+  services.llama-swap = {
+    enable = true;
+    # The 'settings' follow the llama-swap YAML structure
+    # NB default port = 8080
+    settings = {
+      models = {
+        "gemma-4-e4b" = {
+          # ${PORT} is automatically assigned by llama-swap
+          cmd = "${llama-cpp-cuda}/bin/llama-server --model ${modelDir}/gemma-4-E4B-it-UD-Q8_K_XL.gguf --port \${PORT} --n-gpu-layers 100 --flash-attn on --ctx-size 131072";
+          ttl = 600; # Shut down after 10 mins (600s) of idle to save VRAM
+        };
+        "qwen-3-5-9b" = {
+          # ${PORT} is automatically assigned by llama-swap
+          cmd = "${llama-cpp-cuda}/bin/llama-server --model ${modelDir}/Qwen3.5-9B-UD-Q6_K_XL.gguf --port \${PORT} --n-gpu-layers 100 --flash-attn on --ctx-size 131072";
+          ttl = 600; # Shut down after 10 mins (600s) of idle to save VRAM
+        };
+        "qwen-3-6-35b" = {
+          cmd = "${llama-cpp-cuda}/bin/llama-server --model ${modelDir}/Qwen_Qwen3.6-35B-A3B-Q4_K_M.gguf --port \${PORT} -ngl 999 --n-cpu-moe 35 --no-mmap --ctx-size 131072";
+          ttl = 600; # Shut down after 10 mins (600s) of idle to save VRAM
+        };
+      };
     };
   };
 
@@ -68,6 +113,7 @@
     pkgs.docker-compose # This is V2 (the Go version) - podman needs it in PATH
     hello-script
     goodbye-script
+    llama-cpp-cuda
   ];
 
   # required for example for esp32-rs to sandbox the pre-built rustc/rustdoc binaries
