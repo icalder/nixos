@@ -71,6 +71,10 @@ in
           cmd = "${llama-cpp-cuda}/bin/llama-server --model ${modelDir}/gemma-4-E4B-it-UD-Q8_K_XL.gguf --port \${PORT} --n-gpu-layers 100 --flash-attn on --ctx-size 131072";
           ttl = 600; # Shut down after 10 mins (600s) of idle to save VRAM
         };
+        "gemma-4-26b" = {
+          cmd = "${llama-cpp-cuda}/bin/llama-server --model ${modelDir}/gemma-4-26B-A4B-it-UD-Q4_K_M.gguf --port \${PORT} -ngl 999 --n-cpu-moe 35 --no-mmap --ctx-size 131072";
+          ttl = 600; # Shut down after 10 mins (600s) of idle to save VRAM
+        };
         "qwen-3-5-9b" = {
           # ${PORT} is automatically assigned by llama-swap
           cmd = "${llama-cpp-cuda}/bin/llama-server --model ${modelDir}/Qwen3.5-9B-UD-Q6_K_XL.gguf --port \${PORT} --n-gpu-layers 100 --flash-attn on --ctx-size 131072";
