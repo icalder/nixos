@@ -48,8 +48,10 @@ in
     };
   };
 
+  users.groups.llama = { };
+
   systemd.tmpfiles.rules = [
-    "d ${modelDir} 0755 root root -"
+    "d ${modelDir} 0775 root llama -"
   ];
 
   systemd.services.llama-swap = {
@@ -71,8 +73,10 @@ in
           cmd = "${llama-cpp-cuda}/bin/llama-server --model ${modelDir}/gemma-4-E4B-it-UD-Q8_K_XL.gguf --port \${PORT} --n-gpu-layers 100 --flash-attn on --ctx-size 131072";
           ttl = 600; # Shut down after 10 mins (600s) of idle to save VRAM
         };
+        # hf download unsloth/gemma-4-26B-A4B-it-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-26B-A4B-it-GGUF --include "*mmproj-F16*" --include "*UD-Q4_K_XL*"
         "gemma-4-26b" = {
-          cmd = "${llama-cpp-cuda}/bin/llama-server --model ${modelDir}/gemma-4-26B-A4B-it-UD-Q4_K_M.gguf --port \${PORT} -ngl 999 --n-cpu-moe 35 --no-mmap --ctx-size 131072";
+          # https://unsloth.ai/docs/models/gemma-4
+          cmd = "${llama-cpp-cuda}/bin/llama-server --model ${modelDir}/unsloth/gemma-4-26B-A4B-it-GGUF/gemma-4-26B-A4B-it-UD-Q4_K_XL.gguf --port \${PORT} --temp 1.0 --top-p 0.95 --top-k 64 --ctx-size 131072";
           ttl = 600; # Shut down after 10 mins (600s) of idle to save VRAM
         };
         "qwen-3-5-9b" = {
@@ -80,8 +84,11 @@ in
           cmd = "${llama-cpp-cuda}/bin/llama-server --model ${modelDir}/Qwen3.5-9B-UD-Q6_K_XL.gguf --port \${PORT} --n-gpu-layers 100 --flash-attn on --ctx-size 131072";
           ttl = 600; # Shut down after 10 mins (600s) of idle to save VRAM
         };
+        # hf download unsloth/Qwen3.6-35B-A3B-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.6-35B-A3B-GGUF --include "*mmproj-F16*" --include "*UD-Q4_K_XL*"
         "qwen-3-6-35b" = {
-          cmd = "${llama-cpp-cuda}/bin/llama-server --model ${modelDir}/Qwen_Qwen3.6-35B-A3B-Q4_K_M.gguf --port \${PORT} -ngl 999 --n-cpu-moe 35 --no-mmap --ctx-size 131072";
+          #cmd = "${llama-cpp-cuda}/bin/llama-server --model ${modelDir}/unsloth/Qwen3.6-35B-A3B-GGUF/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf --port \${PORT} -ngl 999 --n-cpu-moe 35 --no-mmap --ctx-size 131072";
+          # https://unsloth.ai/docs/models/qwen3.6
+          cmd = "${llama-cpp-cuda}/bin/llama-server --model ${modelDir}/unsloth/Qwen3.6-35B-A3B-GGUF/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf --port \${PORT} --temp 0.6 --top-p 0.95 --top-k 20 --presence-penalty 0.0 --ctx-size 131072";
           ttl = 600; # Shut down after 10 mins (600s) of idle to save VRAM
         };
       };
@@ -107,18 +114,19 @@ in
     ];
   };
 
-  environment.systemPackages = with pkgs; [
-    xdg-utils
-    vim
-    wget
-    nixfmt-rfc-style
-    usbutils
-    kmod # for modprobe, required by WSL usbipd
-    pkgs.docker-compose # This is V2 (the Go version) - podman needs it in PATH
-    hello-script
-    goodbye-script
-    llama-cpp-cuda
-  ];
+  environment.systemPackages =
+    (with pkgs; [
+      xdg-utils
+      vim
+      wget
+      nixfmt-rfc-style
+      usbutils
+      kmod # for modprobe, required by WSL usbipd
+      docker-compose # This is V2 (the Go version) - podman needs it in PATH
+      hello-script
+      goodbye-script
+    ])
+    ++ [ llama-cpp-cuda ];
 
   # required for example for esp32-rs to sandbox the pre-built rustc/rustdoc binaries
   security.wrappers = {
@@ -146,6 +154,7 @@ in
       "dialout"
       "docker"
       "podman"
+      "llama"
     ];
     # openssh.authorizedKeys.keys  = [ "ssh-dss AAAAB3Nza... alice@foobar" ];
   };
