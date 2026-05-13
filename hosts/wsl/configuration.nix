@@ -14,12 +14,24 @@
 }:
 
 let
-  llama-cpp-cuda = unstable-pkgs.llama-cpp.override {
-    blasSupport = true;
-    cudaSupport = true;
-    rocmSupport = false;
-    metalSupport = false;
-  };
+  llama-cpp-cuda =
+    (unstable-pkgs.llama-cpp.override {
+      blasSupport = true;
+      cudaSupport = true;
+      rocmSupport = false;
+      metalSupport = false;
+    }).overrideAttrs
+      (oldAttrs: {
+        src = unstable-pkgs.fetchFromGitHub {
+          # inherit (oldAttrs.src) owner repo;
+          # lib.fakeHash
+          owner = "am17an";
+          repo = "llama.cpp";
+          rev = "mtp-clean";
+          hash = "sha256-ScHAWQlFV5WSPgGONpX90CLXixejqzbT+bUqZHY3Zkg=";
+        };
+        npmDepsHash = "sha256-cV3noOyKmst9vfxyvkCNhihPgwfVGhmPPT4UMloeWZM=";
+      });
   llama-swap-settings = import ../../modules/llama-swap-settings.nix {
     llama-cpp-cuda = llama-cpp-cuda;
     modelDir = "/var/lib/llama-models";

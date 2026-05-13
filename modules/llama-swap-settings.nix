@@ -48,7 +48,7 @@ in
     };
     # hf download unsloth/Qwen3.6-35B-A3B-MTP-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.6-35B-A3B-MTP-GGUF --include "*mmproj-F16*" --include "*UD-Q4_K_XL*"
     "qwen-3-6-35b-mtp" = {
-      cmd = "${llamaServer} --model ${modelDir}/unsloth/Qwen3.6-35B-A3B-MTP-GGUF/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf --port \${PORT} --temp 0.6 --top-p 0.95 --top-k 20 --presence-penalty 0.0 --ctx-size 131072 --spec-type mtp --spec-draft-n-max 2";
+      cmd = "${llamaServer} --model ${modelDir}/unsloth/Qwen3.6-35B-A3B-MTP-GGUF/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf --port \${PORT} --temp 0.6 --top-p 0.95 --top-k 20 --presence-penalty 0.0 --ctx-size 131072 --spec-type draft-mtp --spec-draft-n-max 2";
       ttl = 600;
     };
   };
