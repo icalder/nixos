@@ -53,6 +53,18 @@ in
 
   users.groups.llama = { };
 
+  systemd.tmpfiles.rules = [
+    "d /var/lib/llama-models 0775 root llama -"
+  ];
+
+  systemd.services.llama-swap = {
+    serviceConfig.ReadOnlyPaths = [
+      "/var/lib/llama-models"
+      "/usr/lib/wsl/lib"
+    ];
+    environment.LD_LIBRARY_PATH = "/usr/lib/wsl/lib";
+  };
+
   services.llama-swap = {
     enable = true;
     settings = llama-swap-settings;
