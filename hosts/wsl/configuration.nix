@@ -20,7 +20,10 @@ let
     rocmSupport = false;
     metalSupport = false;
   };
-  modelDir = "/var/lib/llama-models";
+  llama-swap-settings = import ../../modules/llama-swap-settings.nix {
+    llama-cpp-cuda = llama-cpp-cuda;
+    modelDir = "/var/lib/llama-models";
+  };
 in
 {
   # This value determines the NixOS release from which the default
@@ -50,49 +53,9 @@ in
 
   users.groups.llama = { };
 
-  systemd.tmpfiles.rules = [
-    "d ${modelDir} 0775 root llama -"
-  ];
-
-  systemd.services.llama-swap = {
-    serviceConfig.ReadOnlyPaths = [
-      modelDir
-      "/usr/lib/wsl/lib"
-    ];
-    environment.LD_LIBRARY_PATH = "/usr/lib/wsl/lib";
-  };
-
   services.llama-swap = {
     enable = true;
-    # The 'settings' follow the llama-swap YAML structure
-    # NB default port = 8080
-    settings = {
-      models = {
-        "gemma-4-e4b" = {
-          # ${PORT} is automatically assigned by llama-swap
-          cmd = "${llama-cpp-cuda}/bin/llama-server --model ${modelDir}/gemma-4-E4B-it-UD-Q8_K_XL.gguf --port \${PORT} --n-gpu-layers 100 --flash-attn on --ctx-size 131072";
-          ttl = 600; # Shut down after 10 mins (600s) of idle to save VRAM
-        };
-        # hf download unsloth/gemma-4-26B-A4B-it-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-26B-A4B-it-GGUF --include "*mmproj-F16*" --include "*UD-Q4_K_XL*"
-        "gemma-4-26b" = {
-          # https://unsloth.ai/docs/models/gemma-4
-          cmd = "${llama-cpp-cuda}/bin/llama-server --model ${modelDir}/unsloth/gemma-4-26B-A4B-it-GGUF/gemma-4-26B-A4B-it-UD-Q4_K_XL.gguf --port \${PORT} --temp 1.0 --top-p 0.95 --top-k 64 --ctx-size 131072";
-          ttl = 600; # Shut down after 10 mins (600s) of idle to save VRAM
-        };
-        "qwen-3-5-9b" = {
-          # ${PORT} is automatically assigned by llama-swap
-          cmd = "${llama-cpp-cuda}/bin/llama-server --model ${modelDir}/Qwen3.5-9B-UD-Q6_K_XL.gguf --port \${PORT} --n-gpu-layers 100 --flash-attn on --ctx-size 131072";
-          ttl = 600; # Shut down after 10 mins (600s) of idle to save VRAM
-        };
-        # hf download unsloth/Qwen3.6-35B-A3B-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.6-35B-A3B-GGUF --include "*mmproj-F16*" --include "*UD-Q4_K_XL*"
-        "qwen-3-6-35b" = {
-          #cmd = "${llama-cpp-cuda}/bin/llama-server --model ${modelDir}/unsloth/Qwen3.6-35B-A3B-GGUF/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf --port \${PORT} -ngl 999 --n-cpu-moe 35 --no-mmap --ctx-size 131072";
-          # https://unsloth.ai/docs/models/qwen3.6
-          cmd = "${llama-cpp-cuda}/bin/llama-server --model ${modelDir}/unsloth/Qwen3.6-35B-A3B-GGUF/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf --port \${PORT} --temp 0.6 --top-p 0.95 --top-k 20 --presence-penalty 0.0 --ctx-size 131072";
-          ttl = 600; # Shut down after 10 mins (600s) of idle to save VRAM
-        };
-      };
-    };
+    settings = llama-swap-settings;
   };
 
   services.flatpak.enable = true;

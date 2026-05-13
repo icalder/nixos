@@ -1,0 +1,55 @@
+# Returns the llama-swap settings attribute set.
+#
+# Usage:
+#   services.llama-swap = {
+#     enable = true;
+#     settings = import ../../modules/llama-swap.nix {
+#       llama-cpp-cuda = unstable-pkgs.llama-cpp.override { ... };
+#       modelDir = "/var/lib/llama-models";
+#     };
+#   };
+{
+  llama-cpp-cuda,
+  modelDir,
+}:
+
+let
+  llamaServer = "${llama-cpp-cuda}/bin/llama-server";
+in
+{
+  models = {
+    "gemma-4-e4b" = {
+      cmd = "${llamaServer} --model ${modelDir}/gemma-4-E4B-it-UD-Q8_K_XL.gguf --port \${PORT} --n-gpu-layers 100 --flash-attn on --ctx-size 131072";
+      ttl = 600;
+    };
+    # hf download unsloth/gemma-4-26B-A4B-it-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-26B-A4B-it-GGUF --include "*mmproj-F16*" --include "*UD-Q4_K_XL*"
+    "gemma-4-26b" = {
+      cmd = "${llamaServer} --model ${modelDir}/unsloth/gemma-4-26B-A4B-it-GGUF/gemma-4-26B-A4B-it-UD-Q4_K_XL.gguf --port \${PORT} --temp 1.0 --top-p 0.95 --top-k 64 --ctx-size 131072";
+      ttl = 600;
+    };
+    # hf download unsloth/gemma-4-31B-it-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-31B-it-GGUF --include "*UD-Q4_K_XL*"
+    "gemma-4-31b" = {
+      cmd = "${llamaServer} --model ${modelDir}/unsloth/gemma-4-31B-it-GGUF/gemma-4-31B-it-UD-Q4_K_XL.gguf --port \${PORT} --temp 1.0 --top-p 0.95 --top-k 64 --ctx-size 131072";
+      ttl = 600;
+    };
+    # hf download unsloth/granite-4.1-30b-GGUF --local-dir /var/lib/llama-models/unsloth/granite-4.1-30b-GGUF --include "*UD-Q4_K_XL*"
+    "granite-4.1-30b" = {
+      cmd = "${llamaServer} --model ${modelDir}/unsloth/granite-4.1-30b-GGUF/granite-4.1-30b-UD-Q4_K_XL.gguf --port \${PORT} --temp 1.0 --top-p 0.95 --top-k 64 --ctx-size 131072";
+      ttl = 600;
+    };
+    "qwen-3-5-9b" = {
+      cmd = "${llamaServer} --model ${modelDir}/Qwen3.5-9B-UD-Q6_K_XL.gguf --port \${PORT} --n-gpu-layers 100 --flash-attn on --ctx-size 131072";
+      ttl = 600;
+    };
+    # hf download unsloth/Qwen3.6-35B-A3B-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.6-35B-A3B-GGUF --include "*mmproj-F16*" --include "*UD-Q4_K_XL*"
+    "qwen-3-6-35b" = {
+      cmd = "${llamaServer} --model ${modelDir}/unsloth/Qwen3.6-35B-A3B-GGUF/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf --port \${PORT} --temp 0.6 --top-p 0.95 --top-k 20 --presence-penalty 0.0 --ctx-size 131072";
+      ttl = 600;
+    };
+    # hf download unsloth/Qwen3.6-35B-A3B-MTP-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.6-35B-A3B-MTP-GGUF --include "*mmproj-F16*" --include "*UD-Q4_K_XL*"
+    "qwen-3-6-35b-mtp" = {
+      cmd = "${llamaServer} --model ${modelDir}/unsloth/Qwen3.6-35B-A3B-MTP-GGUF/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf --port \${PORT} --temp 0.6 --top-p 0.95 --top-k 20 --presence-penalty 0.0 --ctx-size 131072 --spec-type mtp --spec-draft-n-max 2";
+      ttl = 600;
+    };
+  };
+}
