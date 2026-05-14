@@ -25,12 +25,12 @@ in
     };
     # hf download unsloth/gemma-4-31B-it-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-31B-it-GGUF --include "*UD-Q4_K_XL*"
     "gemma-4-31b" = {
-      cmd = "${llamaServer} --model ${modelDir}/unsloth/gemma-4-31B-it-GGUF/gemma-4-31B-it-UD-Q4_K_XL.gguf --port \${PORT} --temp 1.0 --top-p 0.95 --top-k 64 --ctx-size 131072 --threads 12 --ubatch-size 128";
+      cmd = "${llamaServer} --model ${modelDir}/unsloth/gemma-4-31B-it-GGUF/gemma-4-31B-it-UD-Q4_K_XL.gguf --port \${PORT} --temp 1.0 --top-p 0.95 --top-k 64 --ctx-size 131072 --cache-type-k q8_0 --cache-type-v q8_0 --threads 12 --ubatch-size 128";
       ttl = 600;
     };
     # hf download unsloth/granite-4.1-30b-GGUF --local-dir /var/lib/llama-models/unsloth/granite-4.1-30b-GGUF --include "*UD-Q4_K_XL*"
     "granite-4.1-30b" = {
-      cmd = "${llamaServer} --model ${modelDir}/unsloth/granite-4.1-30b-GGUF/granite-4.1-30b-UD-Q4_K_XL.gguf --port \${PORT} --temp 1.0 --top-p 0.95 --top-k 64 --ctx-size 131072 --threads 12 --ubatch-size 128";
+      cmd = "${llamaServer} --model ${modelDir}/unsloth/granite-4.1-30b-GGUF/granite-4.1-30b-UD-Q4_K_XL.gguf --port \${PORT} --temp 1.0 --top-p 0.95 --top-k 64 --ctx-size 131072 --cache-type-k q8_0 --cache-type-v q8_0 --threads 12 --ubatch-size 128";
       ttl = 600;
     };
     # hf download unsloth/Qwen3.6-35B-A3B-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.6-35B-A3B-GGUF --include "*mmproj-F16*" --include "*UD-Q5_K_XL*"
@@ -45,7 +45,7 @@ in
     };
     # hf download unsloth/Qwen3.6-27B-MTP-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.6-27B-MTP-GGUF --include "*mmproj-F16*" --include "*UD-Q4_K_XL*"
     "qwen-3-6-27b-mtp" = {
-      cmd = "${llamaServer} --model ${modelDir}/unsloth/Qwen3.6-27B-MTP-GGUF/Qwen3.6-27B-UD-Q4_K_XL.gguf --port \${PORT} --temp 0.6 --top-p 0.95 --top-k 20 --presence-penalty 0.0 --ctx-size 131072 --threads 12 --ubatch-size 128 --spec-type draft-mtp --spec-draft-n-max 2";
+      cmd = "${llamaServer} --model ${modelDir}/unsloth/Qwen3.6-27B-MTP-GGUF/Qwen3.6-27B-UD-Q4_K_XL.gguf --port \${PORT} --temp 0.6 --top-p 0.95 --top-k 20 --presence-penalty 0.0 --ctx-size 131072 --cache-type-k q8_0 --cache-type-v q8_0 --threads 12 --ubatch-size 128 --spec-type draft-mtp --spec-draft-n-max 2";
       ttl = 600;
     };
   };
