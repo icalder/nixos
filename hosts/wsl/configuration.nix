@@ -19,18 +19,27 @@ let
       blasSupport = true;
       cudaSupport = true;
       rocmSupport = false;
+      vulkanSupport = false;
       metalSupport = false;
     }).overrideAttrs
       (oldAttrs: {
+        version = "9189";
         src = unstable-pkgs.fetchFromGitHub {
-          # inherit (oldAttrs.src) owner repo;
-          # lib.fakeHash
-          owner = "am17an";
-          repo = "llama.cpp";
-          rev = "mtp-clean";
-          hash = "sha256-ScHAWQlFV5WSPgGONpX90CLXixejqzbT+bUqZHY3Zkg=";
+          inherit (oldAttrs.src) owner repo;
+          tag = "b9189";
+          hash = "sha256-hB0QP82WIzr7aA2Av3FVQKhl09RNoDVYGtKmD1nc5X4=";
         };
-        npmDepsHash = "sha256-cV3noOyKmst9vfxyvkCNhihPgwfVGhmPPT4UMloeWZM=";
+        npmRoot = "tools/ui";
+        npmDepsHash = "sha256-WaEePrEZ7O/7deP2KJhe0AwiSKYA8HOqETmMHUkmBe0=";
+        # src = unstable-pkgs.fetchFromGitHub {
+        #   # inherit (oldAttrs.src) owner repo;
+        #   # lib.fakeHash
+        #   owner = "am17an";
+        #   repo = "llama.cpp";
+        #   rev = "mtp-clean";
+        #   hash = "sha256-ScHAWQlFV5WSPgGONpX90CLXixejqzbT+bUqZHY3Zkg=";
+        # };
+        # npmDepsHash = "sha256-cV3noOyKmst9vfxyvkCNhihPgwfVGhmPPT4UMloeWZM=";
       });
   llama-swap-settings = import ../../modules/llama-swap-settings.nix {
     llama-cpp-cuda = llama-cpp-cuda;
