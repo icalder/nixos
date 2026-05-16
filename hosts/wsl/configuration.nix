@@ -62,16 +62,6 @@ in
 
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
 
-  disabledModules = [ "services/misc/ollama.nix" ];
-  imports = [ "${unstable-pkgs.path}/nixos/modules/services/misc/ollama.nix" ];
-  services.ollama = {
-    enable = false;
-    package = unstable-pkgs.ollama-cuda;
-    environmentVariables = {
-      OLLAMA_CONTEXT_LENGTH = "32768";
-    };
-  };
-
   users.groups.llama = { };
 
   systemd.tmpfiles.rules = [
@@ -105,7 +95,6 @@ in
 
   environment.sessionVariables = {
     LD_LIBRARY_PATH = [
-      # https://yomaq.github.io/posts/nvidia-on-nixos-wsl-ollama-up-24-7-on-your-gaming-pc/
       "/usr/lib/wsl/lib"
     ];
   };
