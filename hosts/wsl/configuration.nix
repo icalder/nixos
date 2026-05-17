@@ -22,11 +22,11 @@ let
       vulkanSupport = false;
       metalSupport = false;
     }).overrideAttrs
-      (oldAttrs: {
-        version = "9189";
+      (oldAttrs: rec {
+        version = "9190";
         src = unstable-pkgs.fetchFromGitHub {
           inherit (oldAttrs.src) owner repo;
-          tag = "b9189";
+          tag = "b${version}";
           hash = "sha256-hB0QP82WIzr7aA2Av3FVQKhl09RNoDVYGtKmD1nc5X4=";
         };
         npmRoot = "tools/ui";
@@ -40,6 +40,16 @@ let
         #   hash = "sha256-ScHAWQlFV5WSPgGONpX90CLXixejqzbT+bUqZHY3Zkg=";
         # };
         # npmDepsHash = "sha256-cV3noOyKmst9vfxyvkCNhihPgwfVGhmPPT4UMloeWZM=";
+
+        # Enable native CPU optimizations (AVX, AVX2, etc.)
+        cmakeFlags = (oldAttrs.cmakeFlags or [ ]) ++ [
+          "-DGGML_NATIVE=ON"
+        ];
+        # Disable Nix's march=native stripping
+        preConfigure = ''
+          export NIX_ENFORCE_NO_NATIVE=0
+          ${oldAttrs.preConfigure or ""}
+        '';
       });
   llama-swap-settings = import ../../modules/llama-swap-settings.nix {
     llama-cpp-cuda = llama-cpp-cuda;
