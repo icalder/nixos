@@ -69,7 +69,10 @@ in
       goose-cli
       jq
     ])
-    ++ [ unstable-pkgs.python314Packages.huggingface-hub ]; # for huggingface-cli
+    ++ [
+      unstable-pkgs.python314Packages.huggingface-hub # for huggingface-cli
+      unstable-pkgs.gh # GitHub CLI
+    ];
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
   # plain files is through 'home.file'.
