@@ -67,6 +67,13 @@ in
 
   services.dbus.enable = true;
 
+  services.udev.enable = true;
+  # Define the custom rule for the Pico Debug Probe
+  services.udev.extraRules = ''
+    SUBSYSTEM=="usb", ATTR{idVendor}=="2e8a", ATTR{idProduct}=="000c", GROUP="dialout", MODE="0660"
+    SUBSYSTEM=="hidraw", ATTRS{idVendor}=="2e8a", ATTRS{idProduct}=="000c", GROUP="dialout", MODE="0660"
+  '';
+
   wsl.useWindowsDriver = true;
   hardware.graphics.enable = true;
 
