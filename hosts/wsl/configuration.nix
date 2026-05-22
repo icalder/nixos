@@ -54,6 +54,7 @@ let
   llama-swap-settings = import ../../modules/llama-swap-settings.nix {
     llama-cpp-cuda = llama-cpp-cuda;
     modelDir = "/var/lib/llama-models";
+    lib = pkgs.lib;
   };
 in
 {
