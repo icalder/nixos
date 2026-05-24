@@ -33,6 +33,7 @@ in
         "--top-p 0.95"
         "--top-k 64"
         "--ctx-size 131072"
+        "--no-ui"
       ];
       ttl = 600;
     };
@@ -55,6 +56,7 @@ in
         "--top-p 0.95"
         "--top-k 64"
         "--ctx-size 131072"
+        "--no-ui"
       ];
       ttl = 600;
     };
@@ -74,6 +76,7 @@ in
         "--cache-type-v q8_0"
         "--threads 12"
         "--ubatch-size 128"
+        "--no-ui"
       ];
       ttl = 600;
     };
@@ -93,24 +96,7 @@ in
         "--cache-type-v q8_0"
         "--threads 12"
         "--ubatch-size 128"
-      ];
-      ttl = 600;
-    };
-    # hf download unsloth/Qwen3.6-35B-A3B-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.6-35B-A3B-GGUF --include "*mmproj-F16*" --include "*UD-Q5_K_XL*"
-    "qwen-3-6-35b" = {
-      cmd = mkCmd [
-        "${llamaServer}"
-        "--model ${modelDir}/unsloth/Qwen3.6-35B-A3B-GGUF/Qwen3.6-35B-A3B-UD-Q5_K_XL.gguf"
-        "--mmproj ${modelDir}/unsloth/Qwen3.6-35B-A3B-GGUF/mmproj-F16.gguf"
-        "--no-mmproj-offload"
-        "--port \${PORT}"
-        "-np 1"
-        "--flash-attn on"
-        "--temp 0.6"
-        "--top-p 0.95"
-        "--top-k 20"
-        "--presence-penalty 0.5"
-        "--ctx-size 131072"
+        "--no-ui"
       ];
       ttl = 600;
     };
@@ -131,6 +117,7 @@ in
         "--ctx-size 131072"
         "--spec-type draft-mtp"
         "--spec-draft-n-max 3"
+        "--no-ui"
       ];
       ttl = 600;
     };
@@ -155,6 +142,7 @@ in
         "--ubatch-size 128"
         "--spec-type draft-mtp"
         "--spec-draft-n-max 3"
+        "--no-ui"
       ];
       ttl = 600;
     };
