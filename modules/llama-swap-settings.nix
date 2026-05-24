@@ -20,6 +20,22 @@ let
 in
 {
   models = {
+    # hf download unsloth/gemma-4-E4B-it-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-E4B-it-GGUF --include "*mmproj-F16*" --include "*UD-Q5_K_XL*"
+    "gemma-4-e4b" = {
+      cmd = mkCmd [
+        "${llamaServer}"
+        "--model ${modelDir}/unsloth/gemma-4-E4B-it-GGUF/gemma-4-E4B-it-UD-Q5_K_XL.gguf"
+        "--mmproj ${modelDir}/unsloth/gemma-4-E4B-it-GGUF/mmproj-F16.gguf"
+        "--port \${PORT}"
+        "-np 2"
+        "--flash-attn on"
+        "--temp 1.0"
+        "--top-p 0.95"
+        "--top-k 64"
+        "--ctx-size 131072"
+      ];
+      ttl = 600;
+    };
     # hf download unsloth/gemma-4-26B-A4B-it-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-26B-A4B-it-GGUF --include "*mmproj-F16*" --include "*UD-Q5_K_XL*"
     # hf download ji-farthing/gemma-4-26B-A4B-it-assistant-Q6_K-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-26B-A4B-it-GGUF --include "*Q6_K*"
     # --spec-draft-model ${modelDir}/unsloth/gemma-4-26B-A4B-it-GGUF/gemma-4-26B-A4B-it-assistant-Q6_K.gguf
