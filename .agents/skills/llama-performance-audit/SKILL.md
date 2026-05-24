@@ -1,6 +1,6 @@
 ---
 name: llama-performance-audit
-description: Compare a llama.cpp tag (or a Nix configuration) to master and produce a focused, performance-oriented summary (CUDA/SYCL/Vulkan/OpenCL/quantization/server/tools, etc.).
+description: Compare a llama.cpp tag (or a Nix configuration) to the latest release and produce a focused, performance-oriented summary (CUDA/SYCL/Vulkan/OpenCL/quantization/server/tools, etc.).
 ---
 
 # llama-performance-audit
