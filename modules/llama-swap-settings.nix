@@ -60,11 +60,11 @@ in
       ];
       ttl = 600;
     };
-    # hf download unsloth/gemma-4-31B-it-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-31B-it-GGUF --include "*mmproj-F16*" --include "*UD-Q4_K_XL*"
+    # hf download unsloth/gemma-4-31B-it-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-31B-it-GGUF --include "*mmproj-F16*" --include "*UD-Q5_K_XL*"
     "gemma-4-31b" = {
       cmd = mkCmd [
         "${llamaServer}"
-        "--model ${modelDir}/unsloth/gemma-4-31B-it-GGUF/gemma-4-31B-it-UD-Q4_K_XL.gguf"
+        "--model ${modelDir}/unsloth/gemma-4-31B-it-GGUF/gemma-4-31B-it-UD-Q5_K_XL.gguf"
         "--mmproj ${modelDir}/unsloth/gemma-4-31B-it-GGUF/mmproj-F16.gguf"
         "--port \${PORT}"
         "-np 1"
@@ -136,11 +136,11 @@ in
       ];
       ttl = 600;
     };
-    # hf download unsloth/Qwen3.6-27B-MTP-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.6-27B-MTP-GGUF --include "*mmproj-F16*" --include "*UD-Q4_K_XL*"
+    # hf download unsloth/Qwen3.6-27B-MTP-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.6-27B-MTP-GGUF --include "*mmproj-F16*" --include "*UD-Q5_K_XL*"
     "qwen-3-6-27b-mtp" = {
       cmd = mkCmd [
         "${llamaServer}"
-        "--model ${modelDir}/unsloth/Qwen3.6-27B-MTP-GGUF/Qwen3.6-27B-UD-Q4_K_XL.gguf"
+        "--model ${modelDir}/unsloth/Qwen3.6-27B-MTP-GGUF/Qwen3.6-27B-UD-Q5_K_XL.gguf"
         "--mmproj ${modelDir}/unsloth/Qwen3.6-27B-MTP-GGUF/mmproj-F16.gguf"
         "--port \${PORT}"
         "-np 1"
