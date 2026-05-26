@@ -23,11 +23,11 @@ let
       metalSupport = false;
     }).overrideAttrs
       (oldAttrs: rec {
-        version = "9315";
+        version = "9351";
         src = unstable-pkgs.fetchFromGitHub {
           inherit (oldAttrs.src) owner repo;
           tag = "b${version}";
-          hash = "sha256-WHDJS5BaP9hVoI1iwxJA1nDjXG6npJQVZtWZItKZ2bE=";
+          hash = "sha256-HgSY+OMfmR1TOV0fQj8kT4g7NOmBXCFtputEy3ashcM=";
         };
         npmRoot = "tools/ui";
         npmDepsHash = "sha256-Iyg8FpcTKf2UYHuK7mA3cTAqVaLcQPcS0YCa5Qf01Gc=";
@@ -44,6 +44,7 @@ let
         # Enable native CPU optimizations (AVX, AVX2, etc.)
         cmakeFlags = (oldAttrs.cmakeFlags or [ ]) ++ [
           "-DGGML_NATIVE=ON"
+          "-DGGML_CUDA_PDL=ON"
         ];
         # Disable Nix's march=native stripping
         preConfigure = ''
