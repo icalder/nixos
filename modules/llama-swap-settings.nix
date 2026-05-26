@@ -27,6 +27,7 @@ in
         "--model ${modelDir}/unsloth/gemma-4-E4B-it-GGUF/gemma-4-E4B-it-UD-Q5_K_XL.gguf"
         "--mmproj ${modelDir}/unsloth/gemma-4-E4B-it-GGUF/mmproj-F16.gguf"
         "--port \${PORT}"
+        "--device CUDA1"
         "-np 2"
         "--flash-attn on"
         "--temp 1.0"
@@ -48,7 +49,6 @@ in
         "${llamaServer}"
         "--model ${modelDir}/unsloth/gemma-4-26B-A4B-it-GGUF/gemma-4-26B-A4B-it-UD-Q5_K_XL.gguf"
         "--mmproj ${modelDir}/unsloth/gemma-4-26B-A4B-it-GGUF/mmproj-F16.gguf"
-        "--no-mmproj-offload"
         "--port \${PORT}"
         "-np 1"
         "--flash-attn on"
@@ -74,7 +74,6 @@ in
         "--top-k 64"
         "--ctx-size 131072"
         "--threads 12"
-        "--ubatch-size 128"
         "--no-ui"
       ];
       ttl = 600;
@@ -94,7 +93,6 @@ in
         "--cache-type-k q8_0"
         "--cache-type-v q8_0"
         "--threads 12"
-        "--ubatch-size 128"
         "--no-ui"
       ];
       ttl = 600;
@@ -105,7 +103,6 @@ in
         "${llamaServer}"
         "--model ${modelDir}/unsloth/Qwen3.6-35B-A3B-MTP-GGUF/Qwen3.6-35B-A3B-UD-Q5_K_XL.gguf"
         "--mmproj ${modelDir}/unsloth/Qwen3.6-35B-A3B-MTP-GGUF/mmproj-F16.gguf"
-        "--no-mmproj-offload"
         "--port \${PORT}"
         "-np 1"
         "--flash-attn on"
@@ -126,7 +123,6 @@ in
         "${llamaServer}"
         "--model ${modelDir}/unsloth/Qwen3.6-27B-MTP-GGUF/Qwen3.6-27B-UD-Q4_K_XL.gguf"
         "--mmproj ${modelDir}/unsloth/Qwen3.6-27B-MTP-GGUF/mmproj-F16.gguf"
-        "--no-mmproj-offload"
         "--port \${PORT}"
         "-np 1"
         "--flash-attn on"
@@ -136,7 +132,6 @@ in
         "--presence-penalty 0.0"
         "--ctx-size 131072"
         "--threads 12"
-        "--ubatch-size 128"
         "--spec-type draft-mtp"
         "--spec-draft-n-max 3"
         "--no-ui"
