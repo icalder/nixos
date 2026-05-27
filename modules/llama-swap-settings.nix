@@ -105,7 +105,7 @@ in
         "--mmproj ${modelDir}/unsloth/Qwen3.5-9B-GGUF/mmproj-F16.gguf"
         "--port \${PORT}"
         "--device CUDA1"
-        "-np 1"
+        "-np 2"
         "--flash-attn on"
         "--temp 1.0"
         "--top-p 0.95"
