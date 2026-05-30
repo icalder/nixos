@@ -158,6 +158,7 @@ in
       # https://nixos.org/guides/nix-pills/04-basics-of-language.html
       gsudo = "sudo git -c \"include.path=${config-dir}/git/config\" -c \"include.path=${builtins.getEnv ("HOME")}/.gitconfig\"";
       goose-desktop = "flatpak run io.github.block.Goose";
+      pins = "pi --no-session";
       #   ll = "ls -l";
       #   la = "ls -la";
       #   l = "ls -CF";
