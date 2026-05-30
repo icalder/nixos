@@ -97,6 +97,7 @@ in
 
   services.llama-swap = {
     enable = true;
+    package = unstable-pkgs.llama-swap;
     settings = llama-swap-settings;
   };
 
