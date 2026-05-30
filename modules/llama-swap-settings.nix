@@ -130,11 +130,12 @@ in
         "--top-k 20"
         "--presence-penalty 0.5"
         "--ctx-size 131072"
-        "--spec-type draft-mtp,ngram-mod"
+        "--spec-type draft-mtp"
+        # "--spec-type draft-mtp,ngram-mod"
         "--spec-draft-n-max 3"
-        "--spec-ngram-mod-n-match 24"
-        "--spec-ngram-mod-n-min 48"
-        "--spec-ngram-mod-n-max 64"
+        # "--spec-ngram-mod-n-match 24"
+        # "--spec-ngram-mod-n-min 48"
+        # "--spec-ngram-mod-n-max 64"
         "--no-ui"
       ];
       ttl = 600;
@@ -154,11 +155,12 @@ in
         "--presence-penalty 0.0"
         "--ctx-size 131072"
         "--threads 12"
-        "--spec-type draft-mtp,ngram-mod"
+        "--spec-type draft-mtp"
+        # "--spec-type draft-mtp,ngram-mod"
         "--spec-draft-n-max 3"
-        "--spec-ngram-mod-n-match 24"
-        "--spec-ngram-mod-n-min 48"
-        "--spec-ngram-mod-n-max 64"
+        # "--spec-ngram-mod-n-match 24"
+        # "--spec-ngram-mod-n-min 48"
+        # "--spec-ngram-mod-n-max 64"
         "--no-ui"
       ];
       ttl = 600;
