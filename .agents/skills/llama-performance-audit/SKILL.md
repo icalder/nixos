@@ -5,6 +5,24 @@ description: Compare a llama.cpp tag (or a Nix configuration) to the latest rele
 
 # llama-performance-audit
 
+## Where to find your Nix configuration
+
+The llama.cpp package override (build tag, source hash, npmDepsHash) lives in:
+
+```
+./hosts/wsl/configuration.nix
+```
+
+This is the file to pass to `--config` when auditing your current setup. The llama-swap settings (model flags and parameters) are in:
+
+```
+./modules/llama-swap-settings.nix
+```
+
+All paths below are relative to the repository root (`./nixos`).
+
+---
+
 This skill provides a CLI script that repeats the steps I used earlier and can be focused using your llama-swap settings:
 - read a Nix config (or accept a tag) to determine which llama.cpp tag was used (e.g. b9222)
 - optionally read your llama-swap settings file (modules/llama-swap-settings.nix) to extract which model flags and parameters you actually use
