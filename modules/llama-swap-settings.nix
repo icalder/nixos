@@ -20,36 +20,14 @@ let
 in
 {
   models = {
-    # hf download unsloth/gemma-4-E4B-it-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-E4B-it-GGUF --include "*mmproj-F16*" --include "*UD-Q5_K_XL*"
-    "gemma-4-e4b" = {
+    # hf download unsloth/gemma-4-12B-it-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-12B-it-GGUF --include "*mmproj-F16*" --include "*UD-Q5_K_XL*"
+    "gemma-4-12b" = {
       cmd = mkCmd [
         "${llamaServer}"
-        "--model ${modelDir}/unsloth/gemma-4-E4B-it-GGUF/gemma-4-E4B-it-UD-Q5_K_XL.gguf"
-        "--mmproj ${modelDir}/unsloth/gemma-4-E4B-it-GGUF/mmproj-F16.gguf"
+        "--model ${modelDir}/unsloth/gemma-4-12B-it-GGUF/gemma-4-12b-it-UD-Q5_K_XL.gguf"
+        "--mmproj ${modelDir}/unsloth/gemma-4-12B-it-GGUF/mmproj-F32.gguf"
         "--port \${PORT}"
-        "--device CUDA1"
-        "-np 2"
-        "--flash-attn on"
-        "--temp 1.0"
-        "--top-p 0.95"
-        "--top-k 64"
-        "--ctx-size 131072"
-        "--no-ui"
-      ];
-      ttl = 600;
-    };
-    # hf download unsloth/gemma-4-26B-A4B-it-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-26B-A4B-it-GGUF --include "*mmproj-F16*" --include "*UD-Q5_K_XL*"
-    # hf download ji-farthing/gemma-4-26B-A4B-it-assistant-Q6_K-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-26B-A4B-it-GGUF --include "*Q6_K*"
-    # --spec-draft-model ${modelDir}/unsloth/gemma-4-26B-A4B-it-GGUF/gemma-4-26B-A4B-it-assistant-Q6_K.gguf
-    # --spec-type draft-simple # or --draft-mtp?
-    # --spec-draft-n-max 3
-    # https://github.com/ggml-org/llama.cpp/issues/23161
-    "gemma-4-26b" = {
-      cmd = mkCmd [
-        "${llamaServer}"
-        "--model ${modelDir}/unsloth/gemma-4-26B-A4B-it-GGUF/gemma-4-26B-A4B-it-UD-Q5_K_XL.gguf"
-        "--mmproj ${modelDir}/unsloth/gemma-4-26B-A4B-it-GGUF/mmproj-F16.gguf"
-        "--port \${PORT}"
+        "--device CUDA0"
         "-np 1"
         "--flash-attn on"
         "--temp 1.0"
@@ -58,7 +36,7 @@ in
         "--ctx-size 131072"
         "--no-ui"
       ];
-      ttl = 600;
+      # ttl = 600;
     };
     # hf download unsloth/gemma-4-31B-it-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-31B-it-GGUF --include "*mmproj-F16*" --include "*UD-Q5_K_XL*"
     "gemma-4-31b" = {
@@ -76,7 +54,7 @@ in
         "--threads 12"
         "--no-ui"
       ];
-      ttl = 600;
+      # ttl = 600;
     };
     # hf download unsloth/granite-4.1-30b-GGUF --local-dir /var/lib/llama-models/unsloth/granite-4.1-30b-GGUF --include "*UD-Q4_K_XL*"
     "granite-4.1-30b" = {
@@ -95,7 +73,7 @@ in
         "--threads 12"
         "--no-ui"
       ];
-      ttl = 600;
+      # ttl = 600;
     };
     # hf download unsloth/Qwen3.5-9B-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.5-9B-GGUF --include "*mmproj-F16*" --include "*UD-Q5_K_XL*"
     "qwen-3-5-9b" = {
@@ -114,7 +92,7 @@ in
         "--ctx-size 131072"
         "--no-ui"
       ];
-      ttl = 600;
+      # ttl = 600;
     };
     # hf download unsloth/Qwen3.6-35B-A3B-MTP-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.6-35B-A3B-MTP-GGUF --include "*mmproj-F16*" --include "*UD-Q5_K_XL*"
     "qwen-3-6-35b-mtp" = {
@@ -138,7 +116,7 @@ in
         # "--spec-ngram-mod-n-max 64"
         "--no-ui"
       ];
-      ttl = 600;
+      # ttl = 600;
     };
     # hf download unsloth/Qwen3.6-27B-MTP-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.6-27B-MTP-GGUF --include "*mmproj-F16*" --include "*UD-Q5_K_XL*"
     "qwen-3-6-27b-mtp" = {
@@ -163,7 +141,7 @@ in
         # "--spec-ngram-mod-n-max 64"
         "--no-ui"
       ];
-      ttl = 600;
+      # ttl = 600;
     };
   };
 }
