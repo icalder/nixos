@@ -70,7 +70,7 @@ in
       graphify
     ])
     ++ [
-      unstable-pkgs.python314Packages.huggingface-hub # for huggingface-cli
+      unstable-pkgs.python3Packages.huggingface-hub # for huggingface-cli
       unstable-pkgs.gh # GitHub CLI
     ];
 

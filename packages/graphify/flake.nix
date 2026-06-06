@@ -76,7 +76,7 @@
           };
         });
 
-        graphifyPackage = pyp.buildPythonApplication rec {
+        graphifyPackage = pyp.buildPythonPackage rec {
           pname = "graphifyy";
           version = "0.8.33"; # Update this to the exact version you need
 
@@ -119,20 +119,26 @@
             description = "AI coding assistant skill that turns folders into a queryable knowledge graph";
             homepage = "https://graphify.net/";
             license = licenses.mit;
-            mainProgram = "graphify";
           };
         };
+
+        # Python environment that bundles graphify + python3 + all deps.
+        # 'nix shell' on this sets PYTHONPATH automatically so
+        # `python3 -c "import graphify"` works from any shell.
+        graphifyEnv = pkgs.python3.withPackages (ps: [ graphifyPackage ]);
       in
       {
-        # Expose the package to 'nix build' or other flakes
+        # packages.default is the Python environment (importable from any shell).
+        # packages.graphify is the raw Python package for dependency use.
         packages = {
           graphify = graphifyPackage;
-          default = graphifyPackage;
+          default = graphifyEnv;
         };
 
-        # Allows you to drop into a temporary shell with graphify available via 'nix shell'
+        # 'nix run' invokes the graphify CLI from the environment
         apps.default = flake-utils.lib.mkApp {
-          drv = graphifyPackage;
+          drv = graphifyEnv;
+          name = "graphify";
         };
       }
     ))
