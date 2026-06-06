@@ -12,16 +12,16 @@
   };
 
   inputs = {
-    # NixOS official package source, using the nixos-25.11 branch here
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    # NixOS official package source
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    nixos-wsl.url = "github:nix-community/nixos-wsl/release-25.11";
+    nixos-wsl.url = "github:nix-community/NixOS-WSL/main";
     agenix = {
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs"; # Ensure consistent nixpkgs
     };
     home-manager = {
-      url = "github:nix-community/home-manager/release-25.11";
+      url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     #hello-world-server.url = "git+file:///home/itcalde/rust/hello-world-server";
@@ -40,6 +40,10 @@
       url = "path:packages/goose";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    graphify = {
+      url = "path:packages/graphify";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -55,6 +59,7 @@
       fr24feed,
       adsbexchange,
       goose,
+      graphify,
       ...
     }@inputs:
     let
@@ -85,6 +90,7 @@
             fr24feed.overlays.default
             adsbexchange.overlays.default
             goose.overlays.default
+            graphify.overlays.default
           ];
           inherit config;
         };

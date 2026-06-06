@@ -55,7 +55,7 @@ in
 
       # LSP server
       nil
-      nixfmt-rfc-style
+      nixfmt
       # Include nodejs by default as it's required by many agents and tools
       nodejs
       # Required for paplay
@@ -65,9 +65,9 @@ in
       agenix
       kubectl
       psmisc
-      wslu # NixOS WSL utilities, e.g. wslview
       goose-cli
       jq
+      graphify
     ])
     ++ [
       unstable-pkgs.python314Packages.huggingface-hub # for huggingface-cli
@@ -178,10 +178,8 @@ in
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;
-    matchBlocks = {
-      "*" = {
-        addKeysToAgent = "yes";
-      };
+    settings."*" = {
+      AddKeysToAgent = "yes";
     };
   };
 

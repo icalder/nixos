@@ -124,7 +124,7 @@ in
       xdg-utils
       vim
       wget
-      nixfmt-rfc-style
+      nixfmt
       usbutils
       kmod # for modprobe, required by WSL usbipd
       docker-compose # This is V2 (the Go version) - podman needs it in PATH
