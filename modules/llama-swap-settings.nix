@@ -20,12 +20,12 @@ let
 in
 {
   models = {
-    # hf download unsloth/gemma-4-12B-it-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-12B-it-GGUF --include "*mmproj-F16*" --include "*UD-Q5_K_XL*"
+    # hf download unsloth/gemma-4-12B-it-qat-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-12B-it-qat-GGUF --include "*mmproj-F16*" --include "*UD-Q4_K_XL*"
     "gemma-4-12b" = {
       cmd = mkCmd [
         "${llamaServer}"
-        "--model ${modelDir}/unsloth/gemma-4-12B-it-GGUF/gemma-4-12b-it-UD-Q5_K_XL.gguf"
-        "--mmproj ${modelDir}/unsloth/gemma-4-12B-it-GGUF/mmproj-F32.gguf"
+        "--model ${modelDir}/unsloth/gemma-4-12B-it-qat-GGUF/gemma-4-12B-it-qat-UD-Q4_K_XL.gguf"
+        "--mmproj ${modelDir}/unsloth/gemma-4-12B-it-qat-GGUF/mmproj-F16.gguf"
         "--port \${PORT}"
         "--device CUDA0"
         "-np 1"
@@ -38,12 +38,12 @@ in
       ];
       # ttl = 600;
     };
-    # hf download unsloth/gemma-4-31B-it-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-31B-it-GGUF --include "*mmproj-F16*" --include "*UD-Q5_K_XL*"
+    # hf download unsloth/gemma-4-31B-it-qat-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-31B-it-qat-GGUF --include "*mmproj-F16*" --include "*UD-Q4_K_XL*"
     "gemma-4-31b" = {
       cmd = mkCmd [
         "${llamaServer}"
-        "--model ${modelDir}/unsloth/gemma-4-31B-it-GGUF/gemma-4-31B-it-UD-Q5_K_XL.gguf"
-        "--mmproj ${modelDir}/unsloth/gemma-4-31B-it-GGUF/mmproj-F16.gguf"
+        "--model ${modelDir}/unsloth/gemma-4-31B-it-qat-GGUF/gemma-4-31B-it-qat-UD-Q4_K_XL.gguf"
+        "--mmproj ${modelDir}/unsloth/gemma-4-31B-it-qat-GGUF/mmproj-F16.gguf"
         "--port \${PORT}"
         "-np 1"
         "--flash-attn on"
