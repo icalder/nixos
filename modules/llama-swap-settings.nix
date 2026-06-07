@@ -21,11 +21,14 @@ in
 {
   models = {
     # hf download unsloth/gemma-4-12B-it-qat-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-12B-it-qat-GGUF --include "*mmproj-F16*" --include "*UD-Q4_K_XL*"
+    # hf download google/gemma-4-12B-it-qat-q4_0-gguf --local-dir /var/lib/llama-models/google/gemma-4-12B-it-qat-q4_0-gguf
     "gemma-4-12b" = {
       cmd = mkCmd [
         "${llamaServer}"
-        "--model ${modelDir}/unsloth/gemma-4-12B-it-qat-GGUF/gemma-4-12B-it-qat-UD-Q4_K_XL.gguf"
-        "--mmproj ${modelDir}/unsloth/gemma-4-12B-it-qat-GGUF/mmproj-F16.gguf"
+        # "--model ${modelDir}/unsloth/gemma-4-12B-it-qat-GGUF/gemma-4-12B-it-qat-UD-Q4_K_XL.gguf"
+        # "--mmproj ${modelDir}/unsloth/gemma-4-12B-it-qat-GGUF/mmproj-F16.gguf"
+        "--model ${modelDir}/google/gemma-4-12B-it-qat-q4_0-gguf/gemma-4-12b-it-qat-q4_0.gguf"
+        "--mmproj ${modelDir}/google/gemma-4-12B-it-qat-q4_0-gguf/mmproj-gemma-4-12b-it-qat-q4_0.gguf"
         "--port \${PORT}"
         "--device CUDA0"
         "-np 1"
@@ -39,11 +42,14 @@ in
       # ttl = 600;
     };
     # hf download unsloth/gemma-4-31B-it-qat-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-31B-it-qat-GGUF --include "*mmproj-F16*" --include "*UD-Q4_K_XL*"
+    # hf download google/gemma-4-31B-it-qat-q4_0-gguf --local-dir /var/lib/llama-models/google/gemma-4-31B-it-qat-q4_0-gguf
     "gemma-4-31b" = {
       cmd = mkCmd [
         "${llamaServer}"
-        "--model ${modelDir}/unsloth/gemma-4-31B-it-qat-GGUF/gemma-4-31B-it-qat-UD-Q4_K_XL.gguf"
-        "--mmproj ${modelDir}/unsloth/gemma-4-31B-it-qat-GGUF/mmproj-F16.gguf"
+        # "--model ${modelDir}/unsloth/gemma-4-31B-it-qat-GGUF/gemma-4-31B-it-qat-UD-Q4_K_XL.gguf"
+        # "--mmproj ${modelDir}/unsloth/gemma-4-31B-it-qat-GGUF/mmproj-F16.gguf"
+        "--model ${modelDir}/google/gemma-4-31B-it-qat-q4_0-gguf/gemma-4-31B_q4_0-it.gguf"
+        "--mmproj ${modelDir}/google/gemma-4-31B-it-qat-q4_0-gguf/gemma-4-31B-it-mmproj.gguf"
         "--port \${PORT}"
         "-np 1"
         "--flash-attn on"
