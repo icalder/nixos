@@ -21,7 +21,7 @@ in
 {
   models = {
     # hf download unsloth/gemma-4-12B-it-qat-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-12B-it-qat-GGUF --include "*mmproj-F16*" --include "*UD-Q4_K_XL*"
-    # hf download Janvitos/gemma-4-12B-it-qat-assistant-MTP-Q8_0-GGUF --local-dir /var/lib/llama-models/Janvitos/gemma-4-12B-it-qat-assistant-MTP-Q8_0-GGUF
+    # hf download unsloth/gemma-4-12B-it-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-12B-it-GGUF --include "*MTP-Q8*"
     # hf download google/gemma-4-12B-it-qat-q4_0-gguf --local-dir /var/lib/llama-models/google/gemma-4-12B-it-qat-q4_0-gguf
     "gemma-4-12b" = {
       cmd = mkCmd [
@@ -40,13 +40,13 @@ in
         "--ctx-size 131072"
         "--spec-type draft-mtp"
         "--spec-draft-n-max 3"
-        "--spec-draft-model ${modelDir}/Janvitos/gemma-4-12B-it-qat-assistant-MTP-Q8_0-GGUF/gemma-4-12B-it-qat-assistant-MTP-Q8_0.gguf"
+        "--spec-draft-model ${modelDir}/unsloth/gemma-4-12B-it-GGUF/MTP/gemma-4-12B-it-MTP-Q8_0.gguf"
         "--no-ui"
       ];
       # ttl = 600;
     };
     # hf download unsloth/gemma-4-31B-it-qat-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-31B-it-qat-GGUF --include "*mmproj-F16*" --include "*UD-Q4_K_XL*"
-    # hf download Radamanthys11/Gemma-4-31B-it-assistant-GGUF --local-dir /var/lib/llama-models/Radamanthys11/Gemma-4-31B-it-assistant-GGUF
+    # hf download unsloth/gemma-4-31B-it-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-31B-it-GGUF --include "*MTP-Q8*"
     # hf download google/gemma-4-31B-it-qat-q4_0-gguf --local-dir /var/lib/llama-models/google/gemma-4-31B-it-qat-q4_0-gguf
     "gemma-4-31b" = {
       cmd = mkCmd [
@@ -63,8 +63,8 @@ in
         "--top-k 64"
         "--ctx-size 131072"
         # "--spec-type draft-mtp"
-        # "--spec-draft-n-max 3"
-        # "--spec-draft-model ${modelDir}/Radamanthys11/Gemma-4-31B-it-assistant-GGUF/gemma-4-31B-it-assistant-Q8_0.gguf"
+        # "--spec-draft-n-max 2"
+        # "--spec-draft-model ${modelDir}/unsloth/gemma-4-31B-it-GGUF/MTP/gemma-4-31B-it-MTP-Q8_0.gguf"
         "--threads 12"
         "--no-ui"
       ];
