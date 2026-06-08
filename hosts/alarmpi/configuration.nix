@@ -28,8 +28,12 @@
 
   age.secrets = {
     itcalde.file = ../../secrets/itcalde.age;
-    "wireless.conf".file = ../../secrets/wireless.conf.age;
-    fr24key.file = ../../secrets/fr24key.age;
+    "wireless.conf" = {
+      file = ../../secrets/wireless.conf.age;
+      owner = "root";
+      group = "wpa_supplicant";
+      mode = "0440";
+    };
   };
 
   # See https://github.com/mcdonc/nixos-pi-zero-2/blob/main/common.nix for more options
