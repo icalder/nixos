@@ -20,8 +20,7 @@ let
 in
 {
   models = {
-    # hf download unsloth/gemma-4-12B-it-qat-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-12B-it-qat-GGUF --include "*mmproj-F16*" --include "*UD-Q4_K_XL*"
-    # hf download unsloth/gemma-4-12B-it-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-12B-it-GGUF --include "*MTP-Q8*"
+    # hf download unsloth/gemma-4-12B-it-qat-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-12B-it-qat-GGUF --include "*mmproj-F16*" --include "*UD-Q4_K_XL*" --include "mtp-*"
     # hf download google/gemma-4-12B-it-qat-q4_0-gguf --local-dir /var/lib/llama-models/google/gemma-4-12B-it-qat-q4_0-gguf
     "gemma-4-12b" = {
       cmd = mkCmd [
@@ -41,13 +40,12 @@ in
         "--spec-draft-device CUDA0"
         "--spec-type draft-mtp"
         "--spec-draft-n-max 2"
-        "--spec-draft-model ${modelDir}/unsloth/gemma-4-12B-it-GGUF/MTP/gemma-4-12B-it-MTP-Q8_0.gguf"
+        "--spec-draft-model ${modelDir}/unsloth/gemma-4-12B-it-qat-GGUF/mtp-gemma-4-12B-it.gguf"
         "--no-ui"
       ];
       # ttl = 600;
     };
-    # hf download unsloth/gemma-4-31B-it-qat-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-31B-it-qat-GGUF --include "*mmproj-F16*" --include "*UD-Q4_K_XL*"
-    # hf download unsloth/gemma-4-31B-it-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-31B-it-GGUF --include "*MTP-Q8*"
+    # hf download unsloth/gemma-4-31B-it-qat-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-31B-it-qat-GGUF --include "*mmproj-F16*" --include "*UD-Q4_K_XL*" --include "mtp-*"
     # hf download google/gemma-4-31B-it-qat-q4_0-gguf --local-dir /var/lib/llama-models/google/gemma-4-31B-it-qat-q4_0-gguf
     "gemma-4-31b" = {
       cmd = mkCmd [
@@ -66,7 +64,7 @@ in
         "--spec-draft-device CUDA1"
         "--spec-type draft-mtp"
         "--spec-draft-n-max 2"
-        "--spec-draft-model ${modelDir}/unsloth/gemma-4-31B-it-GGUF/MTP/gemma-4-31B-it-MTP-Q8_0.gguf"
+        "--spec-draft-model ${modelDir}/unsloth/gemma-4-31B-it-qat-GGUF/mtp-gemma-4-31B-it.gguf"
         "--threads 12"
         "--no-ui"
       ];
