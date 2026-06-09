@@ -23,11 +23,11 @@ let
       metalSupport = false;
     }).overrideAttrs
       (oldAttrs: rec {
-        version = "9562";
+        version = "9585";
         src = unstable-pkgs.fetchFromGitHub {
           inherit (oldAttrs.src) owner repo;
           tag = "b${version}";
-          hash = "sha256-LxWeZgOjT2Yspe+QEEx3wwK4QdbS8oz5xl9hPGz9ijk=";
+          hash = "sha256-io9HQBZ4FGRMGdXivIMYFtljz/tsCj/D4po054caF8Q=";
         };
         npmRoot = "tools/ui";
         npmDepsHash = "sha256-pjdbI6NcZRlJVd62xhgbLhWrwFYwgsIwjORqvo1+VD8=";
@@ -37,9 +37,9 @@ let
         #   owner = "am17an";
         #   repo = "llama.cpp";
         #   rev = "mtp-clean";
-        #   hash = lib.fakeHash;
+        #   hash = "sha256-io9HQBZ4FGRMGdXivIMYFtljz/tsCj/D4po054caF8Q=";
         # };
-        # npmDepsHash = lib.fakeHash;
+        # npmDepsHash = "sha256-pjdbI6NcZRlJVd62xhgbLhWrwFYwgsIwjORqvo1+VD8=";
 
         # Enable native CPU optimizations (AVX, AVX2, etc.)
         cmakeFlags = (oldAttrs.cmakeFlags or [ ]) ++ [
