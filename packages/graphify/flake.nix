@@ -78,29 +78,36 @@
 
         graphifyPackage = pyp.buildPythonPackage rec {
           pname = "graphifyy";
-          version = "0.8.33"; # Update this to the exact version you need
+          version = "0.8.37"; # Update this to the exact version you need
 
           src = pkgs.fetchPypi {
             inherit pname version;
-            hash = "sha256-9MN3XQB3Jullae0UGdpYt2X/5bqds4iknQ8UdYTuekY=";
+            hash = "sha256-5HDXPYf1/UEk+McdyGscQ3A2huql30ZB3SF6Lh6It1E=";
           };
 
           pyproject = true;
           build-system = [ pkgs.python3Packages.setuptools ];
 
           # Runtime Python library dependencies
-          propagatedBuildInputs = with pkgs.python3Packages; [
-            networkx
-            datasketch
-            rapidfuzz
-            tree-sitter
-            tree-sitter-python
-            tree-sitter-javascript
-            tree-sitter-rust
-            tree-sitter-bash
-            tree-sitter-json
-            tree-sitter-c-sharp
-          ] ++ [ tree-sitter-typescript tree-sitter-go ];
+          propagatedBuildInputs =
+            with pkgs.python3Packages;
+            [
+              networkx
+              datasketch
+              rapidfuzz
+              openai
+              tree-sitter
+              tree-sitter-python
+              tree-sitter-javascript
+              tree-sitter-rust
+              tree-sitter-bash
+              tree-sitter-json
+              tree-sitter-c-sharp
+            ]
+            ++ [
+              tree-sitter-typescript
+              tree-sitter-go
+            ];
 
           # Many tree-sitter grammars (go, java, cpp, ruby, etc.) are not in nixpkgs.
           # The package handles missing grammars gracefully at runtime.
