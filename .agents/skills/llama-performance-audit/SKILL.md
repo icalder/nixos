@@ -29,24 +29,24 @@ This skill provides a CLI script that repeats the steps I used earlier and can b
 - call the GitHub API via `gh` to compare that tag to the latest published release (not master)
 - filter commits for performance- and backend-related changes and print a concise summary, prioritizing commits relevant to your configuration (mmproj, flash-attn, spec/mTP, cache types, quantization, context sizes, ubatch, threads, etc.)
 
-It assumes `gh` (GitHub CLI), `jq`, and `rg` (ripgrep) are available in PATH and authenticated.
+It assumes `node` and `gh` (GitHub CLI) are available in PATH and authenticated.
 
 Files provided
-- llama-audit.sh — the executable script that performs the audit
+- llama-audit.js — the executable Node.js script that performs the audit
 
 Usage
 
 - From the skill directory:
 
-  ./llama-audit.sh --config PATH/TO/configuration.nix --swap-settings PATH/TO/modules/llama-swap-settings.nix
+  ./llama-audit.js --config PATH/TO/configuration.nix --swap-settings PATH/TO/modules/llama-swap-settings.nix
 
   or
 
-  ./llama-audit.sh --tag b9222 --repo ggml-org/llama.cpp --swap-settings @modules/llama-swap-settings.nix
+  ./llama-audit.js --tag b9222 --repo ggml-org/llama.cpp --swap-settings @modules/llama-swap-settings.nix
 
   or to compare against a specific tag instead of the latest release:
 
-  ./llama-audit.sh --tag b9222 --target b9400 --swap-settings @modules/llama-swap-settings.nix
+  ./llama-audit.js --tag b9222 --target b9400 --swap-settings @modules/llama-swap-settings.nix
 
 Options
 - --config <path> : Parse a Nix configuration to extract a tag or version (preferred when auditing your config)
@@ -70,7 +70,7 @@ Notes
 Example output
 
 ```
-$ ./llama-audit.sh --tag b9222 --swap-settings @modules/llama-swap-settings.nix
+$ ./llama-audit.js --tag b9222 --swap-settings @modules/llama-swap-settings.nix
 # Latest release: b9400
 # Comparing ggml-org/llama.cpp:b9222 -> b9400...
 
