@@ -1,5 +1,5 @@
 {
-  description = "Goose CLI v1.35.0 — fetched from GitHub release tarballs";
+  description = "Goose CLI v1.38.0 — fetched from GitHub release tarballs";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -8,7 +8,7 @@
   outputs =
     { self, nixpkgs }:
     let
-      version = "1.35.0";
+      version = "1.38.0";
       systems = [
         "x86_64-linux"
         "aarch64-linux"
@@ -59,17 +59,17 @@
         let
           hashes = {
             "goose-x86_64-unknown-linux-gnu.tar.gz" =
-              "b33f4f68f0bcaa898f42b7ae55f7bf790335e956ec0ec3342c5efb66c557a405";
+              "70532ea2ce7d38461cb670e696fa2b93674d16175ec393f2a954ef624161ff9d";
             "goose-x86_64-unknown-linux-musl.tar.gz" =
-              "f6e2592908d641a140e3f25a20cdd22ba6974be34797daa378e64702602b6775";
+              "0ae8ed8f7e35c67fc85df416561b6fc416ef0fa3eaa344dca05e41472152682a";
             "goose-aarch64-unknown-linux-gnu.tar.gz" =
-              "19a08de20428d4a87939b6f10718ed73d64e878b96d95f18ceddc9110b3ccbc7";
+              "601242ad33fbbd70b3a72181aa1d449096f69b608152124ef16757019dec3ec0";
             "goose-aarch64-unknown-linux-musl.tar.gz" =
-              "280b2ae38d4679c48c943a28e3f7da836a63fecd2ac167c4bf3faa0566366707";
+              "c62a6ea1f79df80c2809e836704c60e172f45b24db04f48e26720c1842f16b58";
             "goose-x86_64-apple-darwin.tar.gz" =
-              "315c31bf2fe7455b3f6a2ae3b1e12a0574b5d60fcf62317ff3ca16729ba012bd";
+              "123364a43d295b2f33e245d4869ec6fe1e42991aee89e5eb41efee030e7578de";
             "goose-aarch64-apple-darwin.tar.gz" =
-              "89fa113ede792e6e4d5b73e3e9d4391dab9cc381395cd98d02029c986ddd1260";
+              "3c6b7cf321610dd8a20307ca76a4c75608fb5fe032d4f9fddf9ee1c761f1d4a9";
           };
         in
         hashes.${assetName} or (throw "goose: no hash for ${assetName}");
