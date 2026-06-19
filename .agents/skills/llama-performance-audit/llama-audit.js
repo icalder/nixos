@@ -126,7 +126,7 @@ const priorityMatchRegex = uniquePriorityTerms.length > 0
 // --- Helper: Run gh CLI ---
 function runGh(argsStr) {
   try {
-    return execSync(`gh ${argsStr}`, { encoding: 'utf8' });
+    return execSync(`gh ${argsStr}`, { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 });
   } catch (e) {
     process.stderr.write(`gh command failed: ${e.message}\n`);
     process.exit(2);
