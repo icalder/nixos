@@ -98,6 +98,7 @@ in
   services.llama-swap = {
     enable = true;
     package = unstable-pkgs.llama-swap;
+    listenAddress = "0.0.0.0";
     settings = llama-swap-settings;
   };
 
