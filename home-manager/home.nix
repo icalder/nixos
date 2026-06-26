@@ -68,6 +68,7 @@ in
       goose-cli
       jq
       graphify
+      google-antigravity-cli
     ])
     ++ [
       unstable-pkgs.python3Packages.huggingface-hub # for huggingface-cli

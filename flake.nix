@@ -44,6 +44,10 @@
       url = "path:packages/graphify";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    antigravity-nix = {
+      url = "github:jacopone/antigravity-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -60,6 +64,7 @@
       adsbexchange,
       goose,
       graphify,
+      antigravity-nix,
       ...
     }@inputs:
     let
@@ -74,6 +79,7 @@
           "cuda_nvcc"
           "cuda_cccl"
           "libcublas"
+          "google-antigravity-cli"
         ];
 
       # Helper to generate package sets for different systems
@@ -91,6 +97,7 @@
             adsbexchange.overlays.default
             goose.overlays.default
             graphify.overlays.default
+            antigravity-nix.overlays.default
           ];
           inherit config;
         };
