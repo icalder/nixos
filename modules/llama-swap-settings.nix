@@ -157,5 +157,18 @@ in
       ];
       # ttl = 600;
     };
+    # hf download deepreinforce-ai/Ornith-1.0-35B-GGUF --local-dir /var/lib/llama-models/deepreinforce-ai/Ornith-1.0-35B-GGUF --include "*Q5_K_M*"
+    "ornith-1-0-35b" = {
+      cmd = mkCmd [
+        "${llamaServer}"
+        "--model ${modelDir}/deepreinforce-ai/Ornith-1.0-35B-GGUF/ornith-1.0-35b-Q5_K_M.gguf"
+        "--port \${PORT}"
+        "-np 1"
+        "--flash-attn on"
+        "--ctx-size 131072"
+        "--no-ui"
+      ];
+      # ttl = 600;
+    };
   };
 }
