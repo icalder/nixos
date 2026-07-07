@@ -78,11 +78,11 @@
 
         graphifyPackage = pyp.buildPythonPackage rec {
           pname = "graphifyy";
-          version = "0.8.37"; # Update this to the exact version you need
+          version = "0.8.51"; # Update this to the exact version you need
 
           src = pkgs.fetchPypi {
             inherit pname version;
-            hash = "sha256-5HDXPYf1/UEk+McdyGscQ3A2huql30ZB3SF6Lh6It1E=";
+            hash = "sha256-Xmwo5ajV9nlakZRDKcXDUsjcu1LG/A+mTyZEd1zm0vo=";
           };
 
           pyproject = true;

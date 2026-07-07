@@ -23,11 +23,11 @@ let
       metalSupport = false;
     }).overrideAttrs
       (oldAttrs: rec {
-        version = "9829";
+        version = "9902";
         src = unstable-pkgs.fetchFromGitHub {
           inherit (oldAttrs.src) owner repo;
           tag = "b${version}";
-          hash = "sha256-vG9bMjRzE42MmD/Gz9y8LmW11EDd21VDZhQOoS0BC2I=";
+          hash = "sha256-NjSdixsNlBrM46asGw0Zrs1IZTypWDeWtjcAGzHk9f8=";
         };
         npmRoot = "tools/ui";
         npmDepsHash = "sha256-X1DZgmhS/zHTqDT5zq0kywwntthcJ9vRXeqyO3zz6UU=";
