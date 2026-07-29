@@ -129,6 +129,7 @@
     vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     wget
     intel-gpu-tools # Includes intel_gpu_top to monitor usage
+    screen # Terminal multiplexer
   ];
   # Configure nix-direnv globally (system-wide)
   # This section ensures that the direnvrc is configured correctly for *all* users
