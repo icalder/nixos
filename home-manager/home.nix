@@ -61,6 +61,7 @@ in
       # Required for paplay
       pulseaudio
       file
+      unzip
       skopeo
       agenix
       kubectl
