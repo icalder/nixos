@@ -26,6 +26,10 @@
     };
     #hello-world-server.url = "git+file:///home/itcalde/rust/hello-world-server";
     hello-world-server.url = "github:icalder/hello-world-server";
+    panaremote = {
+      url = "github:icalder/panaremote";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     ubc125.url = "github:icalder/ubc125";
     fr24feed = {
       url = "path:packages/fr24feed";
@@ -59,6 +63,7 @@
       agenix,
       home-manager,
       hello-world-server,
+      panaremote,
       ubc125,
       fr24feed,
       adsbexchange,
@@ -246,6 +251,7 @@
           ./hosts/opti/configuration.nix
           ./hosts/opti/changeip-update.nix
           ./modules/autoupgrade.nix
+          panaremote.nixosModules.default
         ];
       };
 

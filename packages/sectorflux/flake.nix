@@ -62,7 +62,7 @@
     )
     // {
       overlays.default = final: prev: {
-        sectorflux = self.packages.${prev.system}.default;
+        sectorflux = self.packages.${prev.stdenv.hostPlatform.system}.default;
       };
     };
 }
