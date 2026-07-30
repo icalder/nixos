@@ -151,5 +151,28 @@ in
       ];
       # ttl = 600;
     };
+    # see https://github.com/ggml-org/llama.cpp/pull/25165
+    # hf download unsloth/Laguna-S-2.1-GGUF --local-dir /var/lib/llama-models/unsloth/Laguna-S-2.1-GGUF --include "*UD-IQ4_NL*"
+    # hf download poolside/Laguna-S-2.1-GGUF --local-dir /var/lib/llama-models/poolside/Laguna-S-2.1-GGUF --include "*DFlash*"
+    "laguna-s-21" = {
+      cmd = mkCmd [
+        "${llamaServer}"
+        "--model ${modelDir}/unsloth/Laguna-S-2.1-GGUF/UD-IQ4_NL/Laguna-S-2.1-UD-IQ4_NL-00001-of-00003.gguf"
+        # "--spec-type draft-dflash"
+        # "--spec-draft-n-max 15"
+        # "--spec-draft-model ${modelDir}/poolside/Laguna-S-2.1-GGUF/laguna-s-2.1-DFlash-BF16.gguf"
+        "--port \${PORT}"
+        "-np 1"
+        "--flash-attn on"
+        "--ctx-size 65536"
+        "--threads 12"
+        "--no-mmap"
+        # "--cache-type-k q8_0"
+        # "--cache-type-v q8_0"
+        # --n-cpu-moe 46, -ngl 99
+        "--no-ui"
+      ];
+      # ttl = 600;
+    };
   };
 }
