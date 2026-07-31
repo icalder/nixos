@@ -164,7 +164,7 @@ in
         "--port \${PORT}"
         "-np 1"
         "--flash-attn on"
-        "--ctx-size 65536"
+        "--ctx-size 131072"
         "--threads 12"
         "--no-mmap"
         # "--cache-type-k q8_0"
