@@ -47,11 +47,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1785225335,
-        "narHash": "sha256-xzUNPgjfG06GvFNiZq+68euMeP05xydLwSv1cuS8Gq4=",
+        "lastModified": 1785484955,
+        "narHash": "sha256-TwzeI21YWA1muHhDZH/yF6LKlbUeMNdGYgGnxuabWCc=",
         "owner": "jacopone",
         "repo": "antigravity-nix",
-        "rev": "ab4c80d1e6524389fb4ccc05744e9e617ef363c4",
+        "rev": "76202a4f41deb6632907dd1f3972f66b896dd9da",
         "type": "github"
       },
       "original": {
@@ -383,11 +383,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1785439226,
-        "narHash": "sha256-LfUP35S6Otrg3QYpDwU7QAgH2NsrSZY0HBHgCcF8hFo=",
+        "lastModified": 1785521523,
+        "narHash": "sha256-vzQDjfYnbvQnhqtn5agf6tRq88jREmgx2tc6SEQ77ZQ=",
         "owner": "icalder",
         "repo": "panaremote",
-        "rev": "258dcf66f43f405b287f414616d26040c4853f95",
+        "rev": "1423306ce270ebd747a4c074d74965a63de3993c",
         "type": "github"
       },
       "original": {
