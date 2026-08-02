@@ -23,11 +23,11 @@ let
       metalSupport = false;
     }).overrideAttrs
       (oldAttrs: rec {
-        version = "10198";
+        version = "10227";
         src = unstable-pkgs.fetchFromGitHub {
           inherit (oldAttrs.src) owner repo;
           tag = "b${version}";
-          hash = "sha256-YVGDHA1y1dtTZT3/57M4qnyypmxOSszSNg4cDT2Gc5Y=";
+          hash = "sha256-+Qcg+LI9j+y4wIlmLPoYJyRN6BJc+zpyqYX9UCXLJe8=";
         };
         npmRoot = "tools/ui";
         npmDepsHash = "sha256-B7uEynAG70a3xauBKc20RuFa9cnWaWzVBCh+LPLBnIM=";
@@ -113,6 +113,9 @@ in
     # Ensure containers can talk to each other via DNS (essential for Compose)
     defaultNetwork.settings.dns_enabled = true;
   };
+
+  # Include XDG ~/.local/bin in PATH, so that scripts installed there are available in the shell
+  environment.localBinInPath = true;
 
   environment.sessionVariables = {
     LD_LIBRARY_PATH = [
