@@ -44,10 +44,6 @@
       url = "path:packages/goose";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    graphify = {
-      url = "path:packages/graphify";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     antigravity-nix = {
       url = "github:jacopone/antigravity-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -68,7 +64,6 @@
       fr24feed,
       adsbexchange,
       goose,
-      graphify,
       antigravity-nix,
       ...
     }@inputs:
@@ -101,7 +96,6 @@
             fr24feed.overlays.default
             adsbexchange.overlays.default
             goose.overlays.default
-            graphify.overlays.default
             antigravity-nix.overlays.default
           ];
           inherit config;

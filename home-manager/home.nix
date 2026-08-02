@@ -68,7 +68,6 @@ in
       psmisc
       goose-cli
       jq
-      graphify
       google-antigravity-cli
     ])
     ++ [
