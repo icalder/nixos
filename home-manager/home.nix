@@ -58,6 +58,8 @@ in
       nixfmt
       # Include nodejs by default as it's required by many agents and tools
       nodejs
+      # Agents also like using python3, so include it by default as well
+      python3
       # Required for paplay
       pulseaudio
       file
