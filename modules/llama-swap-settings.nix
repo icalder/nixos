@@ -89,30 +89,6 @@ in
       ];
       # ttl = 600;
     };
-    # hf download unsloth/Qwen3.6-35B-A3B-MTP-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.6-35B-A3B-MTP-GGUF --include "*mmproj-F16*" --include "*UD-Q5_K_XL*"
-    "qwen-3-6-35b-mtp" = {
-      cmd = mkCmd [
-        "${llamaServer}"
-        "--model ${modelDir}/unsloth/Qwen3.6-35B-A3B-MTP-GGUF/Qwen3.6-35B-A3B-UD-Q5_K_XL.gguf"
-        "--mmproj ${modelDir}/unsloth/Qwen3.6-35B-A3B-MTP-GGUF/mmproj-F16.gguf"
-        "--port \${PORT}"
-        "-np 1"
-        "--flash-attn on"
-        "--temp 0.6"
-        "--top-p 0.95"
-        "--top-k 20"
-        "--presence-penalty 0.5"
-        "--ctx-size 131072"
-        "--spec-type draft-mtp"
-        # "--spec-type draft-mtp,ngram-mod"
-        "--spec-draft-n-max 3"
-        # "--spec-ngram-mod-n-match 24"
-        # "--spec-ngram-mod-n-min 48"
-        # "--spec-ngram-mod-n-max 64"
-        "--no-ui"
-      ];
-      # ttl = 600;
-    };
     # hf download unsloth/Qwen3.6-27B-MTP-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.6-27B-MTP-GGUF --include "*mmproj-F16*" --include "*UD-Q5_K_XL*"
     "qwen-3-6-27b-mtp" = {
       cmd = mkCmd [
@@ -170,6 +146,29 @@ in
         # "--cache-type-k q8_0"
         # "--cache-type-v q8_0"
         # --n-cpu-moe 46, -ngl 99
+        "--no-ui"
+      ];
+      # ttl = 600;
+    };
+    # hf download meta-models/Muse-Glimmer-30B-GGUF --local-dir /var/lib/llama-models/meta-models/muse-glimmer-30B-GGUF --include "*kquant-dynamic*"
+    # hf download meta-models/Muse-Glimmer-30B-GGUF --local-dir /var/lib/llama-models/meta-models/muse-glimmer-30B-GGUF --include "mmproj*"
+    # hf download meta-models/Muse-Glimmer-30B-GGUF --local-dir /var/lib/llama-models/meta-models/muse-glimmer-30B-GGUF --include "dflash*"
+    "muse-glimmer-30b" = {
+      cmd = mkCmd [
+        "${llamaServer}"
+        "--model ${modelDir}/meta-models/muse-glimmer-30B-GGUF/muse-glimmer-30B-kquant-dynamic.gguf"
+        "--mmproj ${modelDir}/meta-models/muse-glimmer-30B-GGUF/mmproj-kquant.gguf"
+        "--spec-type draft-dflash"
+        "--spec-draft-n-max 15"
+        "--spec-draft-model ${modelDir}/meta-models/muse-glimmer-30B-GGUF/dflash-kquant.gguf"
+        "--port \${PORT}"
+        "-np 1"
+        "--flash-attn on"
+        "--temp 1.0"
+        "--top-p 0.95"
+        "--top-k 64"
+        "--ctx-size 131072"
+        "--threads 12"
         "--no-ui"
       ];
       # ttl = 600;
