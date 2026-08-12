@@ -151,13 +151,13 @@ in
       ];
       # ttl = 600;
     };
-    # hf download meta-models/Muse-Glimmer-30B-GGUF --local-dir /var/lib/llama-models/meta-models/muse-glimmer-30B-GGUF --include "*kquant-dynamic*"
+    # hf download meta-models/Muse-Glimmer-30B-GGUF --local-dir /var/lib/llama-models/meta-models/muse-glimmer-30B-GGUF --include "*Q4_K_XL*"
     # hf download meta-models/Muse-Glimmer-30B-GGUF --local-dir /var/lib/llama-models/meta-models/muse-glimmer-30B-GGUF --include "mmproj*"
     # hf download meta-models/Muse-Glimmer-30B-GGUF --local-dir /var/lib/llama-models/meta-models/muse-glimmer-30B-GGUF --include "dflash*"
     "muse-glimmer-30b" = {
       cmd = mkCmd [
         "${llamaServer}"
-        "--model ${modelDir}/meta-models/muse-glimmer-30B-GGUF/muse-glimmer-30B-kquant-dynamic.gguf"
+        "--model ${modelDir}/meta-models/muse-glimmer-30B-GGUF/Muse-Glimmer-30B-KQuant-Dynamic-Q4_K_XL.gguf"
         "--mmproj ${modelDir}/meta-models/muse-glimmer-30B-GGUF/mmproj-kquant.gguf"
         "--spec-type draft-dflash"
         "--spec-draft-n-max 15"
