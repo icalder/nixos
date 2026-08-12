@@ -142,6 +142,7 @@ in
         "--flash-attn on"
         "--ctx-size 131072"
         "--threads 12"
+        # TODO replace with --load-mode none?
         "--no-mmap"
         # "--cache-type-k q8_0"
         # "--cache-type-v q8_0"
