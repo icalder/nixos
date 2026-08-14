@@ -114,6 +114,31 @@ in
       ];
       # ttl = 600;
     };
+    # hf download unsloth/Qwen3.8-27B-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.8-27B-GGUF --include "*mmproj-F16*" --include "*UD-Q5_K_XL*"
+    "qwen-3-8-27b-mtp" = {
+      cmd = mkCmd [
+        "${llamaServer}"
+        "--model ${modelDir}/unsloth/Qwen3.8-27B-GGUF/Qwen3.8-27B-UD-Q5_K_XL.gguf"
+        "--mmproj ${modelDir}/unsloth/Qwen3.8-27B-GGUF/mmproj-F16.gguf"
+        "--port \${PORT}"
+        "-np 1"
+        "--flash-attn on"
+        "--temp 1.0"
+        "--top-p 0.95"
+        "--top-k 20"
+        "--presence-penalty 0.0"
+        "--ctx-size 131072"
+        "--threads 12"
+        "--spec-type draft-mtp"
+        # "--spec-type draft-mtp,ngram-mod"
+        "--spec-draft-n-max 3"
+        # "--spec-ngram-mod-n-match 24"
+        # "--spec-ngram-mod-n-min 48"
+        # "--spec-ngram-mod-n-max 64"
+        "--no-ui"
+      ];
+      # ttl = 600;
+    };
     # hf download deepreinforce-ai/Ornith-1.0-35B-GGUF --local-dir /var/lib/llama-models/deepreinforce-ai/Ornith-1.0-35B-GGUF --include "*Q5_K_M*"
     "ornith-1-0-35b" = {
       cmd = mkCmd [
