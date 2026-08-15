@@ -77,6 +77,7 @@
           "nvidia-driver"
           "cuda_cudart"
           "cuda_nvcc"
+          "cuda_nvrtc"
           "cuda_cccl"
           "libcublas"
           "google-antigravity-cli"
