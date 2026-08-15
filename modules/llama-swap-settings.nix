@@ -20,6 +20,38 @@ let
 in
 {
   models = {
+    # hf download ggml-org/bge-m3-Q8_0-GGUF --local-dir /var/lib/llama-models/ggml-org/bge-m3-Q8_0-GGUF --include "*q8*"
+    "bge-m3" = {
+      cmd = mkCmd [
+        "${llamaServer}"
+        "--model ${modelDir}/ggml-org/bge-m3-Q8_0-GGUF/bge-m3-q8_0.gguf"
+        "--embeddings"
+        "--ubatch-size 2048"
+        "--port \${PORT}"
+        "--device CUDA0"
+        "-np 2"
+        "--flash-attn on"
+        "--ctx-size 8192"
+        "--no-ui"
+      ];
+      # ttl = 600;
+    };
+    # hf download gpustack/bge-reranker-v2-m3-GGUF --local-dir /var/lib/llama-models/gpustack/bge-reranker-v2-m3-GGUF --include "*Q8*"
+    "bge-reranker-v2-m3" = {
+      cmd = mkCmd [
+        "${llamaServer}"
+        "--model ${modelDir}/gpustack/bge-reranker-v2-m3-GGUF/bge-reranker-v2-m3-Q8_0.gguf"
+        "--reranking"
+        "--ubatch-size 2048"
+        "--port \${PORT}"
+        "--device CUDA0"
+        "-np 2"
+        "--flash-attn on"
+        "--ctx-size 8192"
+        "--no-ui"
+      ];
+      # ttl = 600;
+    };
     # hf download unsloth/gemma-4-12B-it-qat-GGUF --local-dir /var/lib/llama-models/unsloth/gemma-4-12B-it-qat-GGUF --include "*mmproj-F16*" --include "*UD-Q4_K_XL*" --include "mtp-*"
     # hf download google/gemma-4-12B-it-qat-q4_0-gguf --local-dir /var/lib/llama-models/google/gemma-4-12B-it-qat-q4_0-gguf
     "gemma-4-12b" = {
