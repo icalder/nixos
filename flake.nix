@@ -40,10 +40,6 @@
       url = "path:packages/adsbexchange";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    goose = {
-      url = "path:packages/goose";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     antigravity-nix = {
       url = "github:jacopone/antigravity-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -63,7 +59,6 @@
       ubc125,
       fr24feed,
       adsbexchange,
-      goose,
       antigravity-nix,
       ...
     }@inputs:
@@ -96,7 +91,6 @@
             self.overlays.ubc125
             fr24feed.overlays.default
             adsbexchange.overlays.default
-            goose.overlays.default
             antigravity-nix.overlays.default
           ];
           inherit config;

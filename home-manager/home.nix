@@ -68,7 +68,6 @@ in
       agenix
       kubectl
       psmisc
-      goose-cli
       jq
       google-antigravity-cli
     ])
@@ -160,7 +159,6 @@ in
       # https://nix.dev/tutorials/nix-language.html
       # https://nixos.org/guides/nix-pills/04-basics-of-language.html
       gsudo = "sudo git -c \"include.path=${config-dir}/git/config\" -c \"include.path=${builtins.getEnv ("HOME")}/.gitconfig\"";
-      goose-desktop = "flatpak run io.github.block.Goose";
       pins = "pi --no-session";
       #   ll = "ls -l";
       #   la = "ls -la";
@@ -173,8 +171,6 @@ in
           GIT_PROMPT_ONLY_IN_REPO=1
           source "$HOME/.bash-git-prompt/gitprompt.sh"
       fi
-
-      eval "$(goose term init bash)"
     '';
   };
 
