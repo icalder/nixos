@@ -127,15 +127,19 @@ in
       ];
       # ttl = 600;
     };
-    # hf download deepreinforce-ai/Ornith-1.0-35B-GGUF --local-dir /var/lib/llama-models/deepreinforce-ai/Ornith-1.0-35B-GGUF --include "*Q5_K_M*"
-    "ornith-1-0-35b" = {
+    # hf download ornith-ai/Ornith-1.5-35B-A3B-GGUF --local-dir /var/lib/llama-models/ornith-ai/Ornith-1.5-35B-A3B-GGUF --include "mmproj*" --include "*Q5_K_M*"
+    "ornith-1-5-35b-a3b" = {
       cmd = mkCmd [
         "${llamaServer}"
-        "--model ${modelDir}/deepreinforce-ai/Ornith-1.0-35B-GGUF/ornith-1.0-35b-Q5_K_M.gguf"
+        "--model ${modelDir}/ornith-ai/Ornith-1.5-35B-A3B-GGUF/Ornith-1.5-35B-Q5_K_M.gguf"
+        "--mmproj ${modelDir}/ornith-ai/Ornith-1.5-35B-A3B-GGUF/mmproj-Ornith-1.5-35B-BF16.gguf"
         "--port \${PORT}"
         "-np 1"
         "--flash-attn on"
         "--ctx-size 131072"
+        "--temp 1.0" # 0.6 for general tasks?
+        "--top-p 0.95"
+        "--top-k 20"
         "--no-ui"
       ];
       # ttl = 600;
@@ -155,8 +159,7 @@ in
         "--flash-attn on"
         "--ctx-size 131072"
         "--threads 12"
-        # TODO replace with --load-mode none?
-        "--no-mmap"
+        "--load-mode none"
         # "--cache-type-k q8_0"
         # "--cache-type-v q8_0"
         # --n-cpu-moe 46, -ngl 99
