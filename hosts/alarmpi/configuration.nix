@@ -197,6 +197,8 @@
     };
   };
 
+  services.ubc125.enable = true;
+
   # Prepare adsbexchange machine image during system activation.
   # Has to be done here because ExecStartPre cannnot run mknod on /var/lib/machines.
   system.activationScripts.prepare-adsbexchange-machine = {

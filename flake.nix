@@ -30,7 +30,10 @@
       url = "github:icalder/panaremote";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    ubc125.url = "github:icalder/ubc125";
+    ubc125 = {
+      url = "github:icalder/ubc125";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     fr24feed = {
       url = "path:packages/fr24feed";
       # # url = "github:your-username/fr24feed-flake";
@@ -255,6 +258,7 @@
         modules = [
           fr24feed.nixosModules.fr24feed
           ./hosts/alarmpi/configuration.nix
+          ubc125.nixosModules.default
         ];
       };
 
