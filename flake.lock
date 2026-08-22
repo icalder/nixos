@@ -418,11 +418,11 @@
         "rust-overlay": "rust-overlay_2"
       },
       "locked": {
-        "lastModified": 1787348412,
-        "narHash": "sha256-ttvl3Q+HQHjhiNwkAEr1yF78pIKacOVv/hIKhEjd3bQ=",
+        "lastModified": 1787359837,
+        "narHash": "sha256-hm/snfcyUfVPAKJ0q7j1n1CXWl6OaAsN1nOeKZPnXt8=",
         "owner": "icalder",
         "repo": "ubc125",
-        "rev": "538570ebbeef306ddf8ba1b3c9f7853fb13e492c",
+        "rev": "2c50feb2dc47afbcf6a71c21b3d8e61f5d817ad0",
         "type": "github"
       },
       "original": {
