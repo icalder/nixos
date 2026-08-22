@@ -65,7 +65,7 @@ Notes
 - Pagination is automatic: the script loops through all GitHub API pages (30 commits/page) until the full diff is fetched.
 - The Nix config parser recognizes `tag`, `rev`, `shortRev`, and `version` fields (including inside `fetchFromGitHub` blocks).
 - Priority terms are extracted **only** from your swap-settings file — no unconditional defaults are added.
-- Default comparison target is the **latest published release** (fetched via GitHub API). Use `--target master` to compare against master instead.
+- Default comparison target is the **most recently published release** (fetched via GitHub API, including prereleases). This is important for repos like llama.cpp whose `b<N>` build tags are marked as prereleases — GitHub's `releases/latest` endpoint skips them, which would compare against an older formal release. Use `--target master` to compare against master instead.
 
 Example output
 

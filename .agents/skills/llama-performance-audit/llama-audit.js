@@ -134,11 +134,21 @@ function runGh(argsStr) {
 }
 
 // --- Resolve Target ---
+// NOTE: We intentionally fetch the *most recently published* release (including
+// prereleases) rather than GitHub's "releases/latest" endpoint.  The latter
+// skips prereleases, which is wrong for projects like llama.cpp whose b<N> build
+// tags are marked as prereleases — the formal v0.x.y release can be *older* than
+// the user's current build tag, making the comparison meaningless.
 if (!TARGET) {
   try {
-    const latestResp = runGh(`api -H "Accept: application/vnd.github+json" "repos/${REPO}/releases/latest"`);
-    const latest = JSON.parse(latestResp);
-    TARGET = latest.tag_name || 'master';
+    const releasesResp = runGh(`api -H "Accept: application/vnd.github+json" "repos/${REPO}/releases?per_page=10"`);
+    const releases = JSON.parse(releasesResp);
+    if (!Array.isArray(releases) || releases.length === 0) {
+      throw new Error('No releases returned');
+    }
+    // Sort by published_at descending to find the truly latest release.
+    releases.sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
+    TARGET = releases[0].tag_name || 'master';
     process.stderr.write(`Latest release: ${TARGET}\n`);
   } catch (e) {
     process.stderr.write(`Could not fetch latest release; defaulting to master\n`);
