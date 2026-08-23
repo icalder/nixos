@@ -197,7 +197,13 @@
     };
   };
 
-  services.ubc125.enable = true;
+  services.ubc125 = {
+    enable = true;
+    # listenAddress = "0.0.0.0:50051";  # default
+    # device = "/dev/ttyACM0";          # default: auto-detect by USB id
+    # audioDevice = "hw:2";             # default: the Pi's USB mic
+    declick = true; # default: false, experimental audio de-clicker
+  };
 
   # Prepare adsbexchange machine image during system activation.
   # Has to be done here because ExecStartPre cannnot run mknod on /var/lib/machines.
