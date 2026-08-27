@@ -23,11 +23,11 @@ let
       metalSupport = false;
     }).overrideAttrs
       (oldAttrs: rec {
-        version = "10629";
+        version = "10660";
         src = unstable-pkgs.fetchFromGitHub {
           inherit (oldAttrs.src) owner repo;
           tag = "b${version}";
-          hash = "sha256-FaF81ATNx+TT7GsLZkAw+KgdKL51cc4CqYNhpdpe7No=";
+          hash = "sha256-Dhp2D3NufCAoaSYkjMVsDufYobQjb6q36khnGpa/iN0=";
         };
         npmRoot = "tools/ui";
         npmDepsHash = "sha256-2Q7XhaLAArmviOLdQsNbYTfdyDE5pW9lR26cRHEVl9k=";
@@ -45,6 +45,7 @@ let
         cmakeFlags = (oldAttrs.cmakeFlags or [ ]) ++ [
           "-DGGML_NATIVE=ON"
           "-DGGML_CUDA_PDL=ON"
+          "-DCMAKE_CUDA_ARCHITECTURES=120a-real" # Blackwell only, speeds up compile
         ];
         # Disable Nix's march=native stripping
         preConfigure = ''

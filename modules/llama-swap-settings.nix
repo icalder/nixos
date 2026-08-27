@@ -190,5 +190,29 @@ in
       ];
       # ttl = 600;
     };
+    # export HF_HUB_DISABLE_XET=1
+    # hf download unsloth/Qwen3.8-Flash-Next-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.8-Flash-Next-GGUF --include "*UD-Q2_K_XL*"
+    # hf download unsloth/Qwen3.8-Flash-Next-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.8-Flash-Next-GGUF --include "mmproj-F16*"
+    "qwen-3-8-flash-next" = {
+      cmd = mkCmd [
+        "${llamaServer}"
+        "--model ${modelDir}/unsloth/Qwen3.8-Flash-Next-GGUF/UD-Q2_K_XL/Qwen3.8-Flash-Next-UD-Q2_K_XL-00001-of-00003.gguf"
+        "--mmproj ${modelDir}/unsloth/Qwen3.8-Flash-Next-GGUF/mmproj-F16.gguf"
+        "--tensor-read-lazy auto"
+        "--port \${PORT}"
+        "-np 1"
+        "--flash-attn on"
+        "--temp 1.0"
+        "--top-p 0.95"
+        "--top-k 20"
+        "--min-p 0.0"
+        "--ctx-size 131072"
+        "--threads 12"
+        # "--spec-type draft-mtp"
+        # "--spec-draft-n-max 3"
+        "--no-ui"
+      ];
+      # ttl = 600;
+    };
   };
 }
