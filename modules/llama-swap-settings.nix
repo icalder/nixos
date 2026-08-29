@@ -191,12 +191,14 @@ in
       # ttl = 600;
     };
     # export HF_HUB_DISABLE_XET=1
-    # hf download unsloth/Qwen3.8-Flash-Next-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.8-Flash-Next-GGUF --include "*UD-Q2_K_XL*"
+    # hf download unsloth/Qwen3.8-Flash-Next-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.8-Flash-Next-GGUF --include "*UD-IQ3_XXS*"
+    # hf download unsloth/Qwen3.8-Flash-Next-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.8-Flash-Next-GGUF --include "*UD-Q3_K_XL*"
     # hf download unsloth/Qwen3.8-Flash-Next-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.8-Flash-Next-GGUF --include "mmproj-F16*"
     "qwen-3-8-flash-next" = {
       cmd = mkCmd [
         "${llamaServer}"
-        "--model ${modelDir}/unsloth/Qwen3.8-Flash-Next-GGUF/UD-Q2_K_XL/Qwen3.8-Flash-Next-UD-Q2_K_XL-00001-of-00003.gguf"
+        # "--model ${modelDir}/unsloth/Qwen3.8-Flash-Next-GGUF/UD-Q2_K_XL/Qwen3.8-Flash-Next-UD-Q2_K_XL-00001-of-00003.gguf"
+        "--model ${modelDir}/unsloth/Qwen3.8-Flash-Next-GGUF/UD-IQ3_XXS/Qwen3.8-Flash-Next-UD-IQ3_XXS-00001-of-00003.gguf"
         "--mmproj ${modelDir}/unsloth/Qwen3.8-Flash-Next-GGUF/mmproj-F16.gguf"
         "--tensor-read-lazy auto"
         "--port \${PORT}"
