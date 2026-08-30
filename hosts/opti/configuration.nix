@@ -59,6 +59,12 @@
   networking = {
     hostName = "opti";
 
+    # DNS-320 NAS: the router's DNS flakily serves this name, but the
+    # k3s NFS PV (postgres backups) is mounted by name, so pin it here.
+    hosts = {
+      "192.168.1.26" = [ "dns-320" "dns-320.broadband" ];
+    };
+
     useNetworkd = true; # Enable systemd-networkd
     useDHCP = false; # Disable global scripted DHCP
     dhcpcd.enable = false; # Explicitly turn off dhcpcd

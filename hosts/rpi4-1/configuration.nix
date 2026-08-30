@@ -31,6 +31,9 @@
     hostName = "rpi4-1";
     hosts = {
       "192.168.1.48" = [ "opti" ];
+      # DNS-320 NAS: the router's DNS flakily serves this name, but the
+      # k3s NFS PV (postgres backups) is mounted by name, so pin it here.
+      "192.168.1.26" = [ "dns-320" "dns-320.broadband" ];
     };
   };
   time.timeZone = "Europe/London";
