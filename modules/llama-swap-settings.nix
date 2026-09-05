@@ -194,13 +194,16 @@ in
     # hf download unsloth/Qwen3.8-Flash-Next-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.8-Flash-Next-GGUF --include "*UD-IQ3_XXS*"
     # hf download unsloth/Qwen3.8-Flash-Next-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.8-Flash-Next-GGUF --include "*UD-Q3_K_XL*"
     # hf download unsloth/Qwen3.8-Flash-Next-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.8-Flash-Next-GGUF --include "mmproj-F16*"
+    # hf download unsloth/Qwen3.8-Flash-Next-GGUF --local-dir /var/lib/llama-models/unsloth/Qwen3.8-Flash-Next-GGUF --include "MTP/mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf"
     "qwen-3-8-flash-next" = {
       cmd = mkCmd [
         "${llamaServer}"
         # "--model ${modelDir}/unsloth/Qwen3.8-Flash-Next-GGUF/UD-IQ3_XXS/Qwen3.8-Flash-Next-UD-IQ3_XXS-00001-of-00003.gguf"
         "--model ${modelDir}/unsloth/Qwen3.8-Flash-Next-GGUF/UD-Q3_K_XL/Qwen3.8-Flash-Next-UD-Q3_K_XL-00001-of-00003.gguf"
+        # "--spec-draft-model ${modelDir}/unsloth/Qwen3.8-Flash-Next-GGUF/MTP/mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf"
         "--mmproj ${modelDir}/unsloth/Qwen3.8-Flash-Next-GGUF/mmproj-F16.gguf"
         "--lazy-mode auto"
+        "--load-mode none"
         "--port \${PORT}"
         "-np 1"
         "--flash-attn on"
@@ -211,7 +214,7 @@ in
         "--ctx-size 131072"
         "--threads 12"
         # "--spec-type draft-mtp"
-        # "--spec-draft-n-max 3"
+        # "--spec-draft-n-max 2"
         "--no-ui"
       ];
       # ttl = 600;
