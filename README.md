@@ -250,6 +250,12 @@ Updates to the VM configuration, and rebuilds, can be done remotely with ssh acc
   nixos-rebuild switch --flake .#rpi4-1 --sudo --target-host itcalde@rpi4-1
   ```
 
+Here is an example of running the rebuild from a device:
+
+  ```bash
+  sudo nixos-rebuild switch --flake github:icalder/nixos#alarmpi
+  ```
+
 ### Disk Size and Partitioning (Hyper-V)
 
 You can control the disk size and partitioning scheme for your Hyper-V image within the `flake.nix` configuration.
