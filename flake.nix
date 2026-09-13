@@ -43,6 +43,10 @@
       url = "path:packages/adsbexchange";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    agent-sandbox = {
+      url = "path:packages/agent-sandbox";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     antigravity-nix = {
       url = "github:jacopone/antigravity-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -62,6 +66,7 @@
       ubc125,
       fr24feed,
       adsbexchange,
+      agent-sandbox,
       antigravity-nix,
       ...
     }@inputs:
@@ -94,6 +99,7 @@
             self.overlays.ubc125
             fr24feed.overlays.default
             adsbexchange.overlays.default
+            agent-sandbox.overlays.default
             antigravity-nix.overlays.default
           ];
           inherit config;
@@ -283,6 +289,7 @@
       };
 
       packages.${system} = {
+        agent-sandbox = pkgs.agent-sandbox; # local, see packages/agent-sandbox
         hyperv-image = self.nixosConfigurations.hyperv-vm.config.system.build.image;
         k3s-server-image = self.nixosConfigurations.k3s-server.config.system.build.image;
         k3s-agent-image = self.nixosConfigurations.k3s-agent.config.system.build.image;

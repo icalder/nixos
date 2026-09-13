@@ -86,6 +86,9 @@ in
 
   systemd.tmpfiles.rules = [
     "d /var/lib/llama-models 0775 root llama -"
+    # Anchor for the sandbox project bind: WSL interop maps the CWD to
+    # \\wsl.localhost\NixOS\app, so /app must exist on the host.
+    "d /app 0755 root root -"
   ];
 
   systemd.services.llama-swap = {
@@ -135,6 +138,8 @@ in
       docker-compose # This is V2 (the Go version) - podman needs it in PATH
       hello-script
       goodbye-script
+      bubblewrap # sandbox's runtime; also on PATH for other devshells
+      agent-sandbox # provides `sandbox` and `sandbox-verify`
     ])
     ++ [ llama-cpp-cuda ];
 

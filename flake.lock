@@ -39,6 +39,22 @@
         "type": "github"
       }
     },
+    "agent-sandbox": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "path": "packages/agent-sandbox",
+        "type": "path"
+      },
+      "original": {
+        "path": "packages/agent-sandbox",
+        "type": "path"
+      },
+      "parent": []
+    },
     "antigravity-nix": {
       "inputs": {
         "flake-utils": "flake-utils",
@@ -333,6 +349,7 @@
       "inputs": {
         "adsbexchange": "adsbexchange",
         "agenix": "agenix",
+        "agent-sandbox": "agent-sandbox",
         "antigravity-nix": "antigravity-nix",
         "fr24feed": "fr24feed",
         "hello-world-server": "hello-world-server",
