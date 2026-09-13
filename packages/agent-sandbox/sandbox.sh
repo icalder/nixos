@@ -104,6 +104,7 @@ bwrap_args=(
   --ro-bind "$HOME/.cargo" "$SANDBOX_HOME/.cargo"
   --ro-bind "$HOME/.local" "$SANDBOX_HOME/.local"
   --ro-bind "$HOME/.nix-profile" "$SANDBOX_HOME/.nix-profile"
+  --ro-bind "$HOME/.gitconfig" "$SANDBOX_HOME/.gitconfig"
   --tmpfs "$SANDBOX_HOME/.cache"
   --bind-try "$CACHE_HOME/codebase-memory-mcp" "$SANDBOX_HOME/.cache/codebase-memory-mcp"
   --tmpfs "$SANDBOX_HOME/.gemini"
