@@ -285,7 +285,8 @@ stdenv.mkDerivation (finalAttrs: {
   '';
 
   # bubblewrap is pinned to a store path, so the script never has to look it up.
-  # coreutils/procps/curl are what the boundary checks in sandbox-verify run.
+  # coreutils/procps/curl/gnugrep are what the boundary checks in sandbox-verify run
+  # on the host side (the grep package is named gnugrep, separate from coreutils).
   postFixup = ''
     wrapProgram $out/bin/sandbox \
       --set BWRAP ${lib.getExe bubblewrap} \
@@ -293,7 +294,7 @@ stdenv.mkDerivation (finalAttrs: {
 
     wrapProgram $out/bin/sandbox-verify \
       --set SANDBOX_BIN $out/bin/sandbox \
-      --prefix PATH : ${lib.makeBinPath [ bubblewrap coreutils procps curl ]}
+      --prefix PATH : ${lib.makeBinPath [ bubblewrap coreutils procps curl gnugrep ]}
   '';
 
   meta = with lib; {
@@ -325,7 +326,7 @@ Notes:
   docs. Measured: plain `src = ./.` produced two different store paths for identical
   scripts, because `nix build` wrote `flake.lock` and `result` into the directory between
   builds. The filtered source is stable across rebuilds.
-- Final output references (measured): `bash`, `bubblewrap`, `coreutils`, `curl`, `procps`,
+- Final output references (measured): `bash`, `bubblewrap`, `coreutils`, `curl`, `gnugrep`, `procps`,
   and the package itself (`SANDBOX_BIN` points at `$out/bin/sandbox`, expected).
 
 ### Step 4 — `packages/agent-sandbox/flake.nix` (new)
