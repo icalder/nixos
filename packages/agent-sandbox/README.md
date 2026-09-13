@@ -4,7 +4,9 @@ Goal: run the pi coding agent (and similar tools) in a bubblewrap sandbox that
 prevents **accidental** edits/deletions out of scope — writable filesystem
 access limited to the project directory, `/tmp`, and pi's own config dir —
 while **read** access covers what the agent needs to work. A safe sandbox
-equivalent to running the agent in docker/podman.
+equivalent to running the agent in docker/podman. Nix commands inside the
+sandbox route through the host's nix daemon (see trade-offs), so
+`nix-shell -p …`, `nix develop` and `nix build` work as on the host.
 
 Threat model: accidental damage, not a malicious agent. pi's config lives in
 github, so stray self-modification is recoverable, and pi sometimes needs to
@@ -62,6 +64,9 @@ automatically.
 | `/home/sandbox/.cache/codebase-memory-mcp` | host | **read-write** | codebase-memory index store — sandboxed runs share the host's indexed projects |
 | `/home/sandbox/.cache`, `/home/sandbox/.gemini` | fresh tmpfs | **read-write** | tool caches that want to write in `$HOME` |
 | `/nix/store` | host | read-only | node, all nix package deps |
+| `/nix/var/nix` | fresh tmpfs | **read-write** | private nix client state — local-mode profile + GC temp roots |
+| `/nix/var/nix/daemon-socket` | host | read-only | nix daemon socket — nix commands route through the host's daemon (when one runs) |
+| `/etc/nix/nix.conf` | host | read-only | nix client config (flakes feature, substituters, trusted keys) |
 | `/run/current-system/sw` | host | read-only | system binaries (git, curl, python3, …) |
 | `/bin`, `/lib64`, `/usr/bin/env` | host | read-only | sh/bash, linker, `env` for `#!/usr/bin/env node` shebangs |
 | `/etc/resolv.conf`, `/etc/passwd`, `/etc/group`, `/etc/ssl`, `/etc/static/ssl` | host | read-only | DNS, user lookup, TLS CA bundle |
@@ -97,6 +102,8 @@ project+/tmp-only writes.
 - Cannot write: `/`, `/etc`, `$HOME`, `/nix/store`, system profile.
 - `~/.pi` is writable, as intended (pi self-manages; config is in git).
 - Can read+write: `/app` (and changes propagate to the host) and `/tmp`.
+- `nix-shell -p cowsay` runs end-to-end (via the host nix daemon; skipped when
+  the host has no daemon socket).
 - Fresh PID namespace (sees PID 1, far fewer processes than host).
 - Runs as host uid; files created in the project keep correct ownership.
 - Networking works: DNS + outbound HTTPS (TLS verified against the CA bundle).
@@ -158,6 +165,27 @@ project+/tmp-only writes.
     Fixed by creating an empty `/app` on the host (`sudo mkdir /app`,
     one-time) so the Windows-side path exists; the project bind covers it
     up inside the sandbox.
+13. **`nix-shell -p cowsay` failed: `creating directory "/nix/var/nix/profiles": Read-only file system`** —
+    three layers, found by fixing one and re-running:
+    (a) nix-shell/nix-env default their profile to
+    `/nix/var/nix/profiles/per-user/<user>/profile` and use
+    `/nix/var/nix/temproots` for GC temp roots; none of that exists in the
+    sandbox and the root is remounted read-only → fixed with `--tmpfs
+    /nix/var/nix` (private, per-session state tree).
+    (b) `<nixpkgs>` then failed to resolve: the default NIX_PATH entry is
+    `nixpkgs=flake:nixpkgs`, which needs the `flakes` experimental feature —
+    configured in `/etc/nix/nix.conf`, which wasn't bound → bind it
+    read-only.
+    (c) finally the client tried to fetch the flake registry into the store
+    and **lock a file next to the store path** — impossible on the read-only
+    store. On the host this is invisible because strace shows the client
+    talking to the nix daemon (`/nix/var/nix/daemon-socket/socket`), which
+    runs as root and does all store work. Fix: bind the daemon socket
+    read-only and set `NIX_REMOTE=daemon` (skipped when the host has no
+    daemon socket). Side effect: fetches/builds from the sandbox land in the
+    host store — exactly like running nix as this user on the host.
+    Note the client does *not* pick the daemon automatically when the socket
+    exists; `NIX_REMOTE=daemon` is required (`Store URL: local` without it).
 
 ## Trade-offs and limitations (read these)
 
@@ -175,6 +203,16 @@ project+/tmp-only writes.
 - **Read exposure** — the whole nix store and system profile are readable.
   That's the docker base-image equivalent and is what makes the setup robust;
   binding individual store paths instead would be stricter but fragile.
+- **Nix routes through the host daemon** — the sandbox's nix client is wired
+  to the host nix daemon (`NIX_REMOTE=daemon`, socket bound read-only). That
+  is what makes `nix-shell -p …` / `nix develop` / `nix build` work at all:
+  client-side store access is read-only and can't even create the lock file
+  its flake-registry fetch needs. Consequences: fetches and builds from the
+  sandbox write to the host store, and the agent has this user's full
+  nix-daemon access (per the host's `allowed-users`/`trusted-users`) —
+  including `nix store delete`. Accepted under the accident threat model;
+  set `NIX_REMOTE=local` for strict read-only-store mode (then only packages
+  already in the store work, via the `/nix/var/nix` tmpfs).
 - **No host devices/GPU** — only the minimal `--dev /dev` set.
 - **Kernel requirement** — unprivileged user namespaces must be enabled
   (they are on this WSL2 NixOS box; `unshare -Ur true` is a quick test).
@@ -293,10 +331,14 @@ Caveats:
 - Launcher for `sandbox-verify`: `SANDBOX_BIN=…` env var (the wrapper sets it to the
   installed `sandbox`; from a checkout it falls back to the sibling `sandbox.sh`,
   then to `sandbox` on `PATH`).
+- Nix store access: `NIX_REMOTE=…` env var (defaults to `daemon` when the host's
+  daemon socket exists; `NIX_REMOTE=local` for strict read-only-store mode) and
+  `NIX_DAEMON_SOCKET=…` to point at a non-default daemon socket.
 - Interactive use: `./sandbox.sh pi` works the same way (TUI runs in the
   sandbox); this project only tested non-interactive `pi -p`.
 
 ## Files
 
 - `sandbox.sh` — the sandbox wrapper (one bwrap invocation, commented).
-- `verify-sandbox.sh` — 23-check boundary verification suite.
+- `verify-sandbox.sh` — boundary verification suite (24 checks; the nix-shell
+  check is skipped when the host has no nix daemon socket).

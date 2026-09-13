@@ -81,6 +81,15 @@ if [ "$(stat -c %u .v-owner)" = "$host_uid" ]; then rc=0; else rc=1; fi
 check "sandbox-created file owned by host uid" 0 "$rc"
 rm -f .v-owner
 
+echo "== Nix (needs the host nix daemon) =="
+if [ -S "${NIX_DAEMON_SOCKET:-/nix/var/nix/daemon-socket/socket}" ]; then
+  # First run on a machine without cowsay in the store fetches ~136 MiB via
+  # cache.nixos.org (through the daemon).
+  check "nix-shell runs a package via host daemon" 0 "$(in_sandbox 'nix-shell -p cowsay --run "cowsay VERIFY-COW" | grep -q VERIFY-COW')"
+else
+  echo "SKIP  nix-shell check (no nix daemon socket on host)"
+fi
+
 echo "== Network =="
 check "DNS resolution works"                  0 "$(in_sandbox 'getent hosts github.com')"
 # shellcheck disable=SC2016 -- the command runs inside the namespace; expansion must happen there

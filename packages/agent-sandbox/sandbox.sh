@@ -5,8 +5,12 @@
 # malicious activity. pi's config lives in git, so it is bound read-write
 # (pi sometimes needs to manage its own extensions/skills).
 #
-# Writable: /app (the project dir), /tmp (private tmpfs), ~/.pi
-# Read-only: nix store, system binaries, pi/npm/cargo installs
+# Writable: /app (the project dir), /tmp (private tmpfs), ~/.pi,
+#           /nix/var/nix (private tmpfs, nix client state in local mode)
+# Read-only: nix store, system binaries, pi/npm/cargo installs, nix.conf
+# Nix: routes through the host nix daemon (NIX_REMOTE=daemon, socket bound
+#      read-only) when one is running — fetches/builds then land in the host
+#      store, exactly like running nix as this user on the host.
 # Invisible: everything else on the host (ssh keys, other projects, /root…)
 #
 # User-independent: host paths are resolved from $HOME at runtime; on WSL
@@ -81,7 +85,17 @@ bwrap_args=(
   --ro-bind /etc/group /etc/group
   --ro-bind /etc/ssl /etc/ssl
   --ro-bind /etc/static/ssl /etc/static/ssl
+  # nix client config: enables the 'flakes' experimental feature (needed for
+  # the default NIX_PATH entry nixpkgs=flake:nixpkgs) and carries the
+  # substituters/trusted-keys.
+  --ro-bind /etc/nix/nix.conf /etc/nix/nix.conf
   --tmpfs /tmp
+  # Private, per-session nix state tree. In daemon mode the client barely
+  # touches it; in local mode (no daemon on the host) it lets nix-shell/
+  # nix-env create their profile (/nix/var/nix/profiles/per-user/<user>/
+  # profile) and GC temp roots (/nix/var/nix/temproots) instead of hitting
+  # the read-only root.
+  --tmpfs /nix/var/nix
   --bind "$PROJECT_DIR" /app
   --dir "$SANDBOX_HOME"
   --bind "$PI_HOME" "$SANDBOX_HOME/.pi"
@@ -128,6 +142,22 @@ if [ -n "$WIN_USER" ]; then
     --ro-bind-try "$EDGE_EXE" "$EDGE_EXE"
     --bind-try "/mnt/c/Users/$WIN_USER/AppData/Local/Pi" "/mnt/c/Users/$WIN_USER/AppData/Local/Pi"
     --ro-bind-try "/mnt/c/Users/$WIN_USER/AppData/Local/Microsoft/Edge/User Data" "/mnt/c/Users/$WIN_USER/AppData/Local/Microsoft/Edge/User Data"
+  )
+fi
+
+# Nix via the host daemon. The client-side store access is read-only, so
+# client-side operations fail: the flake-registry fetch locks a file next to
+# the store path, and store writes (fetch/build) are impossible. With the
+# daemon socket bound and NIX_REMOTE=daemon, the host daemon (running as
+# root) does the fetches, builds, locks and profile work — full nix-shell /
+# nix develop / nix build support. Skipped when the host has no daemon
+# socket (then only packages already in the store work, via the /nix/var/nix
+# tmpfs above). Override with NIX_REMOTE=… (e.g. NIX_REMOTE=local).
+NIX_DAEMON_SOCKET="${NIX_DAEMON_SOCKET:-/nix/var/nix/daemon-socket/socket}"
+if [ -S "$NIX_DAEMON_SOCKET" ]; then
+  bwrap_args+=(
+    --ro-bind /nix/var/nix/daemon-socket /nix/var/nix/daemon-socket
+    --setenv NIX_REMOTE "${NIX_REMOTE:-daemon}"
   )
 fi
 
