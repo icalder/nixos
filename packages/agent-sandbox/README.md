@@ -300,4 +300,3 @@ Caveats:
 
 - `sandbox.sh` — the sandbox wrapper (one bwrap invocation, commented).
 - `verify-sandbox.sh` — 23-check boundary verification suite.
-- `AGENTS.md` — project aim and the failing prior attempt.
