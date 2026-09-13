@@ -62,6 +62,7 @@ automatically.
 | `/tmp` | fresh tmpfs | **read-write** | private scratch, dies with the sandbox |
 | `/home/sandbox/.pi` | host | **read-write** | pi's config, extensions, skills, sessions — pi self-manages (config is in git) |
 | `/home/sandbox/.cache/codebase-memory-mcp` | host | **read-write** | codebase-memory index store — sandboxed runs share the host's indexed projects |
+| `/home/sandbox/.config/gh` | host | **read-write** | gh CLI credentials (`hosts.yml`) — gh rewrites the file on token refresh, like `~/.pi` |
 | `/home/sandbox/.cache`, `/home/sandbox/.gemini` | fresh tmpfs | **read-write** | tool caches that want to write in `$HOME` |
 | `/nix/store` | host | read-only | node, all nix package deps |
 | `/nix/var/nix` | fresh tmpfs | **read-write** | private nix client state — local-mode profile + GC temp roots |
@@ -101,6 +102,8 @@ project+/tmp-only writes.
 - Cannot read: `~/.ssh`, `/etc/shadow`, `/root`, other home dirs, host `/tmp`.
 - Cannot write: `/`, `/etc`, `$HOME`, `/nix/store`, system profile.
 - `~/.pi` is writable, as intended (pi self-manages; config is in git).
+- `~/.config/gh` is visible and writable when the host has a gh login
+  (checks skipped otherwise) — so `gh auth status` / `gh api` work in the sandbox.
 - Can read+write: `/app` (and changes propagate to the host) and `/tmp`.
 - `nix-shell -p cowsay` runs end-to-end (via the host nix daemon; skipped when
   the host has no daemon socket).
@@ -165,7 +168,13 @@ project+/tmp-only writes.
     Fixed by creating an empty `/app` on the host (`sudo mkdir /app`,
     one-time) so the Windows-side path exists; the project bind covers it
     up inside the sandbox.
-13. **`nix-shell -p cowsay` failed: `creating directory "/nix/var/nix/profiles": Read-only file system`** —
+13. **`gh` reported "You are not logged into any GitHub hosts"** — gh keeps
+    its auth in `~/.config/gh/hosts.yml`, but the sandbox only binds selected
+    `~` dirs (`.pi`, `.cargo`, …); `~/.config` was invisible. Fixed with a
+    read-write `--bind-try` of just `~/.config/gh`: gh rewrites `hosts.yml`
+    on token refresh (so read-only is not enough), and `-try` keeps the
+    sandbox working on hosts without a gh login.
+14. **`nix-shell -p cowsay` failed: `creating directory "/nix/var/nix/profiles": Read-only file system`** —
     three layers, found by fixing one and re-running:
     (a) nix-shell/nix-env default their profile to
     `/nix/var/nix/profiles/per-user/<user>/profile` and use
@@ -200,6 +209,10 @@ project+/tmp-only writes.
   instructions or keys — accepted under the accident threat model because the
   config is versioned in git. If you later want tamper-resistance, see issues
   log item 4.
+- **gh credentials are exposed read-write** — `~/.config/gh` is bound
+  read-write because gh rewrites `hosts.yml` on token refresh. Same accepted
+  trade-off as `~/.pi` above; unlike `~/.pi` that config is not in git, so a
+  stray edit means re-running `gh auth login` on the host.
 - **Read exposure** — the whole nix store and system profile are readable.
   That's the docker base-image equivalent and is what makes the setup robust;
   binding individual store paths instead would be stricter but fragile.
@@ -340,5 +353,6 @@ Caveats:
 ## Files
 
 - `sandbox.sh` — the sandbox wrapper (one bwrap invocation, commented).
-- `verify-sandbox.sh` — boundary verification suite (24 checks; the nix-shell
-  check is skipped when the host has no nix daemon socket).
+- `verify-sandbox.sh` — boundary verification suite (26 checks; the nix-shell
+  check is skipped when the host has no nix daemon socket, and the two gh
+  checks are skipped when the host has no `~/.config/gh`).

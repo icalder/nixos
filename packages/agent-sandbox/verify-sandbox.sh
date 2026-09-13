@@ -60,6 +60,15 @@ check "cannot write /run/current-system/sw"   1 "$(in_sandbox 'touch /run/curren
 check "/home/sandbox/.pi writable (pi self-manages, config in git)" 0 "$(in_sandbox 'touch /home/sandbox/.pi/.v-selftest && rm /home/sandbox/.pi/.v-selftest')"
 check "/home/sandbox/.pi/agent writable (sessions/extensions)"      0 "$(in_sandbox 'touch /home/sandbox/.pi/agent/.v-selftest && rm /home/sandbox/.pi/agent/.v-selftest')"
 
+# gh binds ~/.config/gh read-write (token refresh); skipped on hosts without one.
+echo "== gh CLI config (~/.config/gh) =="
+if [ -d "$HOST_HOME/.config/gh" ]; then
+  check "/home/sandbox/.config/gh visible (gh auth)"              0 "$(in_sandbox 'test -d /home/sandbox/.config/gh')"
+  check "/home/sandbox/.config/gh writable (gh token refresh)"   0 "$(in_sandbox 'touch /home/sandbox/.config/gh/.v-selftest && rm /home/sandbox/.config/gh/.v-selftest')"
+else
+  echo "SKIP  gh config checks (no ~/.config/gh on host)"
+fi
+
 echo "== Project dir: real bind mount to host =="
 echo "host-side-content" > .v-bindfile
 check "sandbox reads host file"               0 "$(in_sandbox 'grep -q host-side-content /app/.v-bindfile')"

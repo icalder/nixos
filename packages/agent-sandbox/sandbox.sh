@@ -6,7 +6,8 @@
 # (pi sometimes needs to manage its own extensions/skills).
 #
 # Writable: /app (the project dir), /tmp (private tmpfs), ~/.pi,
-#           /nix/var/nix (private tmpfs, nix client state in local mode)
+#           ~/.config/gh, /nix/var/nix (private tmpfs, nix client state in
+#           local mode)
 # Read-only: nix store, system binaries, pi/npm/cargo installs, nix.conf
 # Nix: routes through the host nix daemon (NIX_REMOTE=daemon, socket bound
 #      read-only) when one is running — fetches/builds then land in the host
@@ -106,6 +107,11 @@ bwrap_args=(
   --tmpfs "$SANDBOX_HOME/.cache"
   --bind-try "$CACHE_HOME/codebase-memory-mcp" "$SANDBOX_HOME/.cache/codebase-memory-mcp"
   --tmpfs "$SANDBOX_HOME/.gemini"
+  # gh CLI credentials: gh keeps tokens in ~/.config/gh/hosts.yml and rewrites
+  # that file on token refresh, so it is read-write (like ~/.pi). Only the gh
+  # dir is exposed, not the whole ~/.config. -try keeps the sandbox working on
+  # hosts without a gh login.
+  --bind-try "$HOME/.config/gh" "$SANDBOX_HOME/.config/gh"
 )
 
 # WSL/Windows interop (browser-tools skill: launches Windows Edge).
