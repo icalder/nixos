@@ -22,9 +22,21 @@
   swapDevices = [
     {
       device = "/swapfile";
+      # Disk swapback stays only as a rare last resort. zramSwap has a higher
+      # priority, so build memory pressure is absorbed in RAM first instead of
+      # thrashing swap on the SD card (which triggered the mmc stall / hang).
       size = 1024; # Size in MB (1GB)
     }
   ];
+
+  # In-RAM compressed swap instead of relying on the SD-backed /swapfile.
+  # A nix upgrade runs 4 parallel builds that spike RAM on this 512 MB Pi;
+  # with zram first, that pressure is handled in RAM rather than generating
+  # heavy disk I/O on the (marginal) SD card during updates.
+  zramSwap = {
+    enable = true;
+    memoryPercent = 75; # cap the device at 3/4 of RAM; zstd keeps effective cap high
+  };
 
   age.secrets = {
     itcalde.file = ../../secrets/itcalde.age;
@@ -102,6 +114,11 @@
     "itcalde"
   ];
   nix.channel.enable = false;
+
+  # Cap concurrent build jobs so peak RAM and concurrent disk I/O stay
+  # manageable during upgrades on this low-RAM Pi (reduces the memory
+  # pressure that previously overloaded I/O and hung the machine).
+  nix.maxJobs = 2;
 
   # programs.firefox.enable = true;
   programs.git.enable = true;
