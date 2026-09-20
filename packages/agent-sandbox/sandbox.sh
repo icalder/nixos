@@ -100,6 +100,10 @@ bwrap_args=(
   --bind "$PROJECT_DIR" /app
   --dir "$SANDBOX_HOME"
   --bind "$PI_HOME" "$SANDBOX_HOME/.pi"
+  # Re-expose the same dir at the host's absolute path so absolute symlinks
+  # inside .pi (e.g. agent/skills/browser-tools -> ~/.pi/pi-skills/browser-tools)
+  # resolve in the sandbox. No new exposure: identical content, already rw.
+  --bind "$PI_HOME" "$HOME/.pi"
   --ro-bind "$HOME/.npm-global" "$SANDBOX_HOME/.npm-global"
   --ro-bind "$HOME/.cargo" "$SANDBOX_HOME/.cargo"
   --ro-bind "$HOME/.local" "$SANDBOX_HOME/.local"
@@ -176,6 +180,9 @@ bwrap_args+=(
   --unsetenv PI_SESSION_FILE
   --unsetenv PI_SESSION_ID
   --unsetenv PI_CODING_AGENT
+  # The sandbox is the safety net: tell pi's per-command and per-write guard
+  # extensions (command-guardian, file-write-approval) to stand down.
+  --setenv PI_SANDBOX 1
   --remount-ro /
   --chdir /app
 )
