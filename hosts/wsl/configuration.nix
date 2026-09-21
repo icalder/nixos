@@ -21,13 +21,17 @@ let
       rocmSupport = false;
       vulkanSupport = false;
       metalSupport = false;
+      # nodejs 26.9.0 (nodejs_latest) fails its sandboxed test suite;
+      # its Hydra build is broken too, so nothing is in the cache.
+      # Pin to nodejs 24 LTS. Remove once https://github.com/NixOS/nixpkgs/issues/564449 is fixed.
+      nodejs_latest = unstable-pkgs.nodejs_24;
     }).overrideAttrs
       (oldAttrs: rec {
-        version = "11028";
+        version = "11064";
         src = unstable-pkgs.fetchFromGitHub {
           inherit (oldAttrs.src) owner repo;
           tag = "b${version}";
-          hash = "sha256-p33/5tqdlcvnSXrq3vnJpS7PAkUeEA3K30TBcigJolM=";
+          hash = "sha256-Ity2iPRlFwDLi6tui4rlpBMXDR/2x77gVtIP9NFUvTM=";
         };
         npmRoot = "tools/ui";
         npmDepsHash = "sha256-2Q7XhaLAArmviOLdQsNbYTfdyDE5pW9lR26cRHEVl9k=";
