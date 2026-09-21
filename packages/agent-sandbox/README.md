@@ -73,7 +73,8 @@ automatically.
 | `/etc/resolv.conf`, `/etc/passwd`, `/etc/group`, `/etc/ssl`, `/etc/static/ssl` | host | read-only | DNS, user lookup, TLS CA bundle |
 | `~/.npm-global` | host | read-only | pi and gemini installs (node bundles) |
 | `~/.nix-profile` | host | read-only | node, npm, user-installed nix tools |
-| `~/.cargo`, `~/.local` | host | read-only | MCP server binaries (cratesio-mcp, codebase-memory-mcp) |
+| `~/.cargo` | host | **read-write** | cargo toolchain — registry cache, `cargo install` output (MCP server binaries) |
+| `~/.local` | host | read-only | codebase-memory-mcp binary |
 | `/init`, `/run/WSL` | host | read-only | WSL interop — needed to launch Windows binaries (see Browser tools) |
 | `/mnt/c/…/cmd.exe`, `/mnt/c/…/msedge.exe` | host | read-only | the only Windows executables exposed (username lookup, Edge launcher) |
 | `/mnt/c/Users/<you>/AppData/Local/Pi` | host | **read-write** | Edge browser profile dir used by the browser-tools skill |
@@ -104,6 +105,9 @@ project+/tmp-only writes.
 - `~/.pi` is writable, as intended (pi self-manages; config is in git).
 - `~/.config/gh` is visible and writable when the host has a gh login
   (checks skipped otherwise) — so `gh auth status` / `gh api` work in the sandbox.
+- `~/.cargo` is visible and writable when the host has a cargo install
+  (checks skipped otherwise) — so `cargo fetch` / `cargo build` work in the
+  sandbox.
 - Can read+write: `/app` (and changes propagate to the host) and `/tmp`.
 - `nix-shell -p cowsay` runs end-to-end (via the host nix daemon; skipped when
   the host has no daemon socket).
@@ -195,6 +199,11 @@ project+/tmp-only writes.
     host store — exactly like running nix as this user on the host.
     Note the client does *not* pick the daemon automatically when the socket
     exists; `NIX_REMOTE=daemon` is required (`Store URL: local` without it).
+15. **`cargo fetch` failed: `failed to create directory
+    /home/sandbox/.cargo/registry/src/index.crates.io-…/winapi-util-0.1.11`
+    (EROFS)** — cargo's registry cache and `cargo install` output live under
+    `~/.cargo`, which was bound read-only. Fixed with a read-write bind (same
+    accident-not-malice model as `~/.pi`).
 
 ## Trade-offs and limitations (read these)
 

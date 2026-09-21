@@ -60,6 +60,15 @@ check "cannot write /run/current-system/sw"   1 "$(in_sandbox 'touch /run/curren
 check "/home/sandbox/.pi writable (pi self-manages, config in git)" 0 "$(in_sandbox 'touch /home/sandbox/.pi/.v-selftest && rm /home/sandbox/.pi/.v-selftest')"
 check "/home/sandbox/.pi/agent writable (sessions/extensions)"      0 "$(in_sandbox 'touch /home/sandbox/.pi/agent/.v-selftest && rm /home/sandbox/.pi/agent/.v-selftest')"
 
+# cargo is bound read-write (registry cache, cargo install); skipped on hosts without one.
+echo "== cargo home (~/.cargo) =="
+if [ -d "$HOST_HOME/.cargo" ]; then
+  check "/home/sandbox/.cargo visible (cargo toolchain)"          0 "$(in_sandbox 'test -d /home/sandbox/.cargo')"
+  check "/home/sandbox/.cargo writable (cargo fetch/install)"    0 "$(in_sandbox 'touch /home/sandbox/.cargo/.v-selftest && rm /home/sandbox/.cargo/.v-selftest')"
+else
+  echo "SKIP  cargo checks (no ~/.cargo on host)"
+fi
+
 # gh binds ~/.config/gh read-write (token refresh); skipped on hosts without one.
 echo "== gh CLI config (~/.config/gh) =="
 if [ -d "$HOST_HOME/.config/gh" ]; then

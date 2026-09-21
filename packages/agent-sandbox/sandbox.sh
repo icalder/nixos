@@ -6,8 +6,8 @@
 # (pi sometimes needs to manage its own extensions/skills).
 #
 # Writable: /app (the project dir), /tmp (private tmpfs), ~/.pi,
-#           ~/.config/gh, /nix/var/nix (private tmpfs, nix client state in
-#           local mode)
+#           ~/.cargo, ~/.config/gh, /nix/var/nix (private tmpfs, nix client
+#           state in local mode)
 # Read-only: nix store, system binaries, pi/npm/cargo installs, nix.conf
 # Nix: routes through the host nix daemon (NIX_REMOTE=daemon, socket bound
 #      read-only) when one is running — fetches/builds then land in the host
@@ -105,7 +105,9 @@ bwrap_args=(
   # resolve in the sandbox. No new exposure: identical content, already rw.
   --bind "$PI_HOME" "$HOME/.pi"
   --ro-bind "$HOME/.npm-global" "$SANDBOX_HOME/.npm-global"
-  --ro-bind "$HOME/.cargo" "$SANDBOX_HOME/.cargo"
+  # cargo writes under ~/.cargo (registry cache/src, cargo install output) —
+  # cargo fetch/build needs it; same accident-not-malice model as ~/.pi.
+  --bind "$HOME/.cargo" "$SANDBOX_HOME/.cargo"
   --ro-bind "$HOME/.local" "$SANDBOX_HOME/.local"
   --ro-bind "$HOME/.nix-profile" "$SANDBOX_HOME/.nix-profile"
   --ro-bind "$HOME/.gitconfig" "$SANDBOX_HOME/.gitconfig"
