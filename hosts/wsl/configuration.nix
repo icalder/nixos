@@ -27,11 +27,11 @@ let
       nodejs_latest = unstable-pkgs.nodejs_24;
     }).overrideAttrs
       (oldAttrs: rec {
-        version = "11064";
+        version = "11181";
         src = unstable-pkgs.fetchFromGitHub {
           inherit (oldAttrs.src) owner repo;
           tag = "b${version}";
-          hash = "sha256-Ity2iPRlFwDLi6tui4rlpBMXDR/2x77gVtIP9NFUvTM=";
+          hash = "sha256-XSMDYvSQRdazfVpMV7za1O3PpoDZCHNXJAM3z1N1+W0=";
         };
         npmRoot = "tools/ui";
         npmDepsHash = "sha256-2Q7XhaLAArmviOLdQsNbYTfdyDE5pW9lR26cRHEVl9k=";
