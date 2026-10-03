@@ -1,5 +1,16 @@
 # NIXOS Configuration Stuff
 
+## Workarounds!
+
+### binfmt
+
+Temporary workaround for binfmt_misc issue:
+
+`sudo umount /proc/sys/fs/binfmt_misc/status` *before* running rebuild switch.
+See:
+- https://github.com/nix-community/NixOS-WSL/issues/1109
+- https://github.com/microsoft/WSL/pull/40621
+
 ## Key Links
 https://nix.dev/tutorials/nix-language.html
 
