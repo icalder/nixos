@@ -67,8 +67,9 @@ hf download meta-models/Muse-Glimmer-30B-GGUF --local-dir /mnt/f/llama-models/me
 
 ```sh
 export HF_HUB_DISABLE_XET=1
-hf download unsloth/Qwen3.8-Flash-Next-GGUF --local-dir /mnt/f/llama-models/unsloth/Qwen3.8-Flash-Next-GGUF --include "*UD-IQ3_XXS*"
 hf download unsloth/Qwen3.8-Flash-Next-GGUF --local-dir /mnt/f/llama-models/unsloth/Qwen3.8-Flash-Next-GGUF --include "*UD-Q3_K_XL*"
+hf download unsloth/Qwen3.8-Flash-Next-GGUF --local-dir /mnt/f/llama-models/unsloth/Qwen3.8-Flash-Next-GGUF --include "*UD-IQ4_XS*"
+hf download unsloth/Qwen3.8-Flash-Next-GGUF --local-dir /mnt/f/llama-models/unsloth/Qwen3.8-Flash-Next-GGUF --include "*UD-Q4_K_XL*"
 hf download unsloth/Qwen3.8-Flash-Next-GGUF --local-dir /mnt/f/llama-models/unsloth/Qwen3.8-Flash-Next-GGUF --include "mmproj-F16*"
-hf download unsloth/Qwen3.8-Flash-Next-GGUF --local-dir /mnt/f/llama-models/unsloth/Qwen3.8-Flash-Next-GGUF --include "MTP/mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf"
+hf download ggml-org/Qwen3.8-Flash-Next-GGUF --local-dir /mnt/f/llama-models/ggml-org/Qwen3.8-Flash-Next-GGUF --include "mtp-Qwen3.8-Flash-Next-Q4_0.gguf"
 ```
