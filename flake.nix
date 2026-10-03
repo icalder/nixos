@@ -74,17 +74,31 @@
       system = "x86_64-linux";
       system-aarch64 = "aarch64-linux";
 
+      # Allow the NVIDIA-licensed CUDA/cuDNN packages (the name list misses
+      # the toolkit's internal dependencies; meta.license is a list there),
+      # plus the two packages that are unfree for other reasons.
       allowUnfreePredicate =
         pkg:
         builtins.elem (nixpkgs.lib.getName pkg) [
           "nvidia-driver"
-          "cuda_cudart"
-          "cuda_nvcc"
-          "cuda_nvrtc"
-          "cuda_cccl"
-          "libcublas"
           "google-antigravity-cli"
-        ];
+        ]
+        ||
+          builtins.all
+            (
+              l:
+              (l.free or true)
+              || builtins.elem (l.shortName or "") [
+                "CUDA EULA"
+                "cuDNN EULA"
+              ]
+            )
+            (
+              let
+                m = pkg.meta or { };
+              in
+              m.licenses or (nixpkgs.lib.toList (m.license or [ ]))
+            );
 
       # Helper to generate package sets for different systems
       mkPkgs =
