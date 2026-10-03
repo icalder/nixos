@@ -27,14 +27,14 @@ let
       nodejs_latest = unstable-pkgs.nodejs_24;
     }).overrideAttrs
       (oldAttrs: rec {
-        version = "11181";
+        version = "11330";
         src = unstable-pkgs.fetchFromGitHub {
           inherit (oldAttrs.src) owner repo;
           tag = "b${version}";
-          hash = "sha256-XSMDYvSQRdazfVpMV7za1O3PpoDZCHNXJAM3z1N1+W0=";
+          hash = "sha256-wvYSa4zxGUQn4KxAd+FOQcuJ9pkkj0AjDhJe0zedFMo=";
         };
         npmRoot = "tools/ui";
-        npmDepsHash = "sha256-2Q7XhaLAArmviOLdQsNbYTfdyDE5pW9lR26cRHEVl9k=";
+        npmDepsHash = "sha256-a17M+L3nLdRnN6WMB6imPFmwqG2g8uv+gwN0XTAUrf8=";
         # src = unstable-pkgs.fetchFromGitHub {
         #   # inherit (oldAttrs.src) owner repo;
         #   # lib.fakeHash
@@ -104,7 +104,7 @@ in
   };
 
   services.llama-swap = {
-    enable = true;
+    enable = false;
     package = unstable-pkgs.llama-swap;
     listenAddress = "0.0.0.0";
     settings = llama-swap-settings;
