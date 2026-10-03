@@ -212,9 +212,10 @@ in
         "--top-k 20"
         "--min-p 0.0"
         "--ctx-size 131072"
-        "--threads 12"
+        "--threads 6"
         # "--spec-type draft-mtp"
         # "--spec-draft-n-max 2"
+        "-lzm on"
         "--no-ui"
       ];
       # ttl = 600;
