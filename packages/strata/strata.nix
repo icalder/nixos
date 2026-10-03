@@ -1,16 +1,17 @@
 {
   lib,
-  stdenv,        # overridden: cudaPackages.backendStdenv (the host compiler nvcc drives)
+  stdenv, # overridden: cudaPackages.backendStdenv (the host compiler nvcc drives)
   cmake,
   ninja,
   pkg-config,
   fetchFromGitHub,
-  cudaPackages,  # overridden: cudaPackages_13 (Blackwell sm_120 needs CUDA >= 13)
+  writeText,
+  cudaPackages, # overridden: cudaPackages_13 (Blackwell sm_120 needs CUDA >= 13)
   python3,
 }:
 
 let
-  version = "0.1.32";
+  version = "0.1.37";
 
   # The GPUs on the target host: RTX PRO 4000 Blackwell (24 GB) and RTX 5060
   # Ti (16 GB) - both sm_120.
@@ -20,7 +21,7 @@ let
     owner = "Niko1221";
     repo = "Strata";
     tag = "v${version}";
-    hash = "sha256-HF941bwf8v/Fqxw6oYQnr5gEEO9Xq5Om8IfF3qQZpwE=";
+    hash = "sha256-0so8fFampbUIvWmYQPKr3MzHH0lB6kCtluxWe/erves=";
   };
 
   # llama.cpp at the commit Strata pins (third_party/ggml/VERSION.txt).
@@ -31,114 +32,119 @@ let
     owner = "ggml-org";
     repo = "llama.cpp";
     rev = "3cf03257f219afbe7334045ff7c6a06ac68c627d";
-    hash = "sha256-wHbXU0r6Dl0OwqDUJbEeeRwW894NcnIhrqBxzvFWooA=";
+    hash = "sha256-SRGoXa+4ACBCB3eaG9XFYhMN1i0FyPEy9Rrer+dFGYI=";
   };
 
   # The Python runtime: Strata's requirements.txt, plus jsonschema (optional
   # upstream; enables full json_schema validation). strata-init creates a
   # --system-site-packages venv on top of this, so setup.py pip-installs
   # nothing.
-  strataPython = python3.withPackages (ps: with ps; [
-    numpy
-    jinja2
-    regex
-    pyyaml
-    tqdm
-    requests
-    pillow
-    psutil
-    jsonschema
-  ]);
+  strataPython = python3.withPackages (
+    ps: with ps; [
+      numpy
+      jinja2
+      regex
+      pyyaml
+      tqdm
+      requests
+      pillow
+      psutil
+      jsonschema
+    ]
+  );
 
   # Assembles a writable install from this package's read-only tree. It finds
   # $out/strata relative to itself at run time (referencing the derivation
   # from inside its own text would be circular).
-  strataInit = lib.writeText {
-    name = "strata-init";
-    text = ''
-      #!/bin/sh
-      # Assemble a writable Strata install from the Nix package.
-      #
-      #   strata-init [--force] [dir]        (default dir: ~/Strata)
-      #
-      # Copies the read-only Strata tree (prebuilt engine, server, tools)
-      # from the Nix store into a writable directory and creates the Python
-      # environment. Model weights are NOT downloaded here: run setup.py
-      # afterwards (a 70-120 GB download).
-      set -eu
+  strataInit = writeText "strata-init" ''
+    #!/bin/sh
+    # Assemble a writable Strata install from the Nix package.
+    #
+    #   strata-init [--force] [dir]        (default dir: ~/Strata)
+    #
+    # Copies the read-only Strata tree (prebuilt engine, server, tools)
+    # from the Nix store into a writable directory and creates the Python
+    # environment. Model weights are NOT downloaded here: run setup.py
+    # afterwards (a 70-120 GB download).
+    set -eu
 
-      self="$(readlink -f "$0")"
-      out_dir="$(dirname "$(dirname "$self")")"
-      tree="$out_dir/strata"
-      python="${strataPython}/bin/python"
+    self="$(readlink -f "$0")"
+    out_dir="$(dirname "$(dirname "$self")")"
+    tree="$out_dir/strata"
+    python="${strataPython}/bin/python"
 
-      force=0
-      if [ "${1:-}" = "--force" ]; then
-        force=1
-        shift
-      fi
-      target="${1:-$HOME/Strata}"
+    force=0
+    target="$HOME/Strata"
+    if [ "$#" -ge 1 ] && [ "$1" = "--force" ]; then
+      force=1
+      shift
+    fi
+    if [ "$#" -ge 1 ]; then
+      target="$1"
+    fi
 
-      if [ -f "$target/engine/BUILD.json" ] && [ "$force" -eq 0 ]; then
-        echo "A Strata install already exists at $target."
-        echo
-        echo "Set up / start a model with:"
-        echo
-        echo "  cd $target && .venv/bin/python setup.py --yes"
-        exit 0
-      fi
-
-      if [ "$force" -eq 1 ] && [ -e "$target" ]; then
-        echo "Removing existing $target (--force)"
-        rm -rf "$target"
-      fi
-
-      echo "Assembling Strata in $target ..."
-      mkdir -p "$target"
-      cp -a "$tree/." "$target/"
-
-      # Python environment for setup.py and the server. --system-site-packages
-      # makes the Nix store's packages visible, so setup.py's pip step is a
-      # no-op (the stamp written below records that).
-      "$python" -m venv --system-site-packages "$target/.venv"
-
-      "$target/.venv/bin/python" - "$target" <<'PY'
-      import json
-      import sys
-      from pathlib import Path
-
-      target = Path(sys.argv[1])
-      # Bare names: setup.py's pip_install treats any requirement whose name
-      # appears here (pinned or not) as already satisfied.
-      names = [
-          # Strata's requirements.txt
-          "numpy", "jinja2", "regex", "pyyaml", "tqdm", "requests",
-          "cmake", "ninja", "pillow", "psutil",
-          "markupsafe", "certifi", "charset-normalizer", "idna",
-          "urllib3", "colorama",
-          # CUDA wheels setup.py would otherwise pip-install (~0.7 GB) for
-          # any non-local engine; the Nix-built engine links the store's
-          # CUDA libraries through its RPATH.
-          "nvidia-cublas", "nvidia-cuda-runtime",
-      ]
-      stamp = target / ".venv" / ".strata-pip.json"
-      stamp.write_text(json.dumps(sorted(names)))
-      print("wrote", stamp)
-      PY
-
+    if [ -f "$target/engine/BUILD.json" ] && [ "$force" -eq 0 ]; then
+      echo "A Strata install already exists at $target."
       echo
-      echo "Strata is installed in $target (engine: Nix-built, CUDA 13, sm_120, GPU vision)."
+      echo "Set up / start a model with:"
       echo
-      echo "Next, download and prepare a model (70-120 GB):"
-      echo
-      echo "  cd $target"
-      echo "  .venv/bin/python setup.py --yes"
-      echo
-      echo "then start it:"
-      echo
-      echo "  cd $target && ./run-<model>.sh"
-    '';
-  };
+      echo "  cd $target && .venv/bin/python setup.py --yes"
+      exit 0
+    fi
+
+    if [ "$force" -eq 1 ] && [ -e "$target" ]; then
+      echo "Removing existing $target (--force)"
+      rm -rf "$target"
+    fi
+
+    echo "Assembling Strata in $target ..."
+    mkdir -p "$target"
+    cp -a "$tree/." "$target/"
+    # The store tree is read-only (0444/0555) and cp -a keeps those modes;
+    # setup.py writes configs, run scripts and engine/BUILD.json into it.
+    chmod -R u+w "$target"
+
+    # Python environment for setup.py and the server. --system-site-packages
+    # makes the Nix store's packages visible, so setup.py's pip step is a
+    # no-op (the stamp written below records that).
+    "$python" -m venv --system-site-packages "$target/.venv"
+
+    "$target/.venv/bin/python" - "$target" <<'PY'
+    import json
+    import sys
+    from pathlib import Path
+
+    target = Path(sys.argv[1])
+    # Bare names: setup.py's pip_install treats any requirement whose name
+    # appears here (pinned or not) as already satisfied.
+    names = [
+        # Strata's requirements.txt
+        "numpy", "jinja2", "regex", "pyyaml", "tqdm", "requests",
+        "cmake", "ninja", "pillow", "psutil",
+        "markupsafe", "certifi", "charset-normalizer", "idna",
+        "urllib3", "colorama",
+        # CUDA wheels setup.py would otherwise pip-install (~0.7 GB) for
+        # any non-local engine; the Nix-built engine links the store's
+        # CUDA libraries through its RPATH.
+        "nvidia-cublas", "nvidia-cuda-runtime",
+    ]
+    stamp = target / ".venv" / ".strata-pip.json"
+    stamp.write_text(json.dumps(sorted(names)))
+    print("wrote", stamp)
+    PY
+
+    echo
+    echo "Strata is installed in $target (engine: Nix-built, CUDA 13, sm_120, GPU vision)."
+    echo
+    echo "Next, download and prepare a model (70-120 GB):"
+    echo
+    echo "  cd $target"
+    echo "  .venv/bin/python setup.py --yes"
+    echo
+    echo "then start it:"
+    echo
+    echo "  cd $target && ./run-<model>.sh"
+  '';
 in
 stdenv.mkDerivation {
   pname = "strata";
@@ -162,13 +168,16 @@ stdenv.mkDerivation {
     "-DSTRATA_GGML_DIR=${llamaSrc}"
   ];
 
-  # The engine only (its static deps build with it). Tests are off: the
-  # published tree's tests/ would fetch Catch2 from the network.
-  cmakeBuildTarget = "strata";
+  # The engine only (its static deps build with it); the tree's parity/test
+  # executables are separate ninja targets. Tests are off: the published
+  # tree's tests/ would fetch Catch2 from the network.
+  ninjaFlags = [ "strata" ];
 
   postBuild = ''
     # The image encoder is a separate CMake project (tools/vision) built
-    # against llama.cpp's mtmd at the same pinned commit.
+    # against llama.cpp's mtmd at the same pinned commit. The cmake setup hook
+    # left the shell in $cmakeBuildDir ("build"), so build-vision lands in
+    # build/build-vision and every path below is relative to that directory.
     cmake -S ${src}/tools/vision -B build-vision \
       -DCMAKE_BUILD_TYPE=Release \
       -DLLAMA_DIR=${llamaSrc} \
@@ -183,14 +192,18 @@ stdenv.mkDerivation {
     # The runtime tree: what the user copies to a writable place
     # (strata-init) and runs setup.py in. setup.py writes configs, the venv,
     # model marks and run scripts into this tree.
+    #
+    # --no-preserve=mode: the store's copy of the source is read-only (0444
+    # files, 0555 directories), which would both block the writes below and
+    # make strata-init's `cp -a` hand the user a read-only tree.
     mkdir -p $out/strata
-    cp -r ${src}/* $out/strata/
+    cp -r --no-preserve=mode ${src}/* $out/strata/
 
     # The prebuilt engine. setup.py accepts it via engine/BUILD.json
     # (source != "local", archs cover the GPUs, version >= MIN_ENGINE), so it
     # neither downloads nor compiles an engine at setup time.
     mkdir -p $out/strata/engine
-    install -m755 build/strata $out/strata/engine/strata
+    install -m755 strata $out/strata/engine/strata
     install -m755 build-vision/bin/strata-vision $out/strata/engine/strata-vision
     cat > $out/strata/engine/BUILD.json <<EOF
     {
@@ -210,8 +223,8 @@ stdenv.mkDerivation {
     # (get_llama_cpp()'s existence check). This skips setup.py's 37 MB zip
     # download.
     mkdir -p $out/strata/third_party/llama.cpp
-    cp -r ${llamaSrc}/ggml $out/strata/third_party/llama.cpp/ggml
-    cp -r ${llamaSrc}/gguf-py $out/strata/third_party/llama.cpp/gguf-py
+    cp -r --no-preserve=mode ${llamaSrc}/ggml $out/strata/third_party/llama.cpp/ggml
+    cp -r --no-preserve=mode ${llamaSrc}/gguf-py $out/strata/third_party/llama.cpp/gguf-py
 
     # The launcher (finds $out/strata relative to itself at run time).
     install -m755 ${strataInit} $out/bin/strata-init
@@ -229,8 +242,8 @@ stdenv.mkDerivation {
     # No GPU is needed: this inspects the binaries and the interpreter only.
     # The engines must link the store's CUDA libraries (RPATH), and the
     # Python environment must import everything the server and the tools use.
-    readelf -d build/strata | grep -q "libcudart.so.13"
-    readelf -d build/strata | grep -Eq "RPATH|RUNPATH"
+    readelf -d strata | grep -q "libcudart.so.13"
+    readelf -d strata | grep -Eq "RPATH|RUNPATH"
     readelf -d build-vision/bin/strata-vision | grep -q "libcudart.so.13"
     ${strataPython}/bin/python -c "import numpy, jinja2, regex, yaml, tqdm, requests, PIL, psutil, jsonschema"
   '';
