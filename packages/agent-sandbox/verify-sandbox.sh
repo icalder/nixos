@@ -43,7 +43,11 @@ echo "== Visibility: host paths must be invisible =="
 check "cannot read $HOST_HOME/.ssh"           1 "$(in_sandbox "ls $HOST_HOME/.ssh")"
 check "cannot read /etc/shadow"               1 "$(in_sandbox 'cat /etc/shadow')"
 check "cannot see /root"                      1 "$(in_sandbox 'ls /root')"
-check "host home dir not visible"             1 "$(in_sandbox "ls $HOST_HOME")"
+# The host home dir exists as an empty mount-point shell: the .pi re-exposure
+# bind (absolute symlinks in .pi must resolve) makes bwrap create its parent.
+# The intent is that no *host content* is reachable, so check that only the
+# re-exposed .pi entry is present.
+check "host home dir exposes no host content" 0 "$(in_sandbox "test \"\$(ls -A $HOST_HOME 2>/dev/null | grep -cvx .pi)\" -eq 0")"
 check "cannot read host /tmp"                 1 "$(in_sandbox 'cat /tmp/host-marker 2>/dev/null')"
 echo "marker" > /tmp/host-marker
 check "host /tmp not visible in sandbox"      1 "$(in_sandbox 'cat /tmp/host-marker')"
@@ -67,6 +71,23 @@ if [ -d "$HOST_HOME/.cargo" ]; then
   check "/home/sandbox/.cargo writable (cargo fetch/install)"    0 "$(in_sandbox 'touch /home/sandbox/.cargo/.v-selftest && rm /home/sandbox/.cargo/.v-selftest')"
 else
   echo "SKIP  cargo checks (no ~/.cargo on host)"
+fi
+
+# Go is bound read-write (module cache, go install, build cache); skipped on
+# hosts without a Go setup.
+echo "== Go home (~/.go) =="
+if [ -d "$HOST_HOME/go" ]; then
+  check "/home/sandbox/go visible (Go toolchain)"         0 "$(in_sandbox 'test -d /home/sandbox/go')"
+  check "/home/sandbox/go writable (go build/install)"   0 "$(in_sandbox 'touch /home/sandbox/go/.v-selftest && rm /home/sandbox/go/.v-selftest')"
+  # .cache is a fresh tmpfs, so a plain write test would pass even without
+  # the bind; a host-side marker proves the host cache is the one seen.
+  if [ -d "$HOST_HOME/.cache/go-build" ]; then
+    echo marker > "$HOST_HOME/.cache/go-build/.v-selftest-host"
+    check "/home/sandbox/.cache/go-build shares host build cache" 0 "$(in_sandbox 'test -f /home/sandbox/.cache/go-build/.v-selftest-host')"
+    rm -f "$HOST_HOME/.cache/go-build/.v-selftest-host"
+  fi
+else
+  echo "SKIP  go checks (no ~/.go on host)"
 fi
 
 # gh binds ~/.config/gh read-write (token refresh); skipped on hosts without one.

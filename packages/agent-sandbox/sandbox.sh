@@ -5,9 +5,9 @@
 # malicious activity. pi's config lives in git, so it is bound read-write
 # (pi sometimes needs to manage its own extensions/skills).
 #
-# Writable: /app (the project dir), /tmp (private tmpfs), ~/.pi,
-#           ~/.cargo, ~/.config/gh, /nix/var/nix (private tmpfs, nix client
-#           state in local mode)
+# Writable: /app (the project dir), /tmp (private tmpfs), ~/.pi, ~/.cargo,
+#           ~/.go (module cache, go install, build cache), ~/.config/gh,
+#           /nix/var/nix (private tmpfs, nix client state in local mode)
 # Read-only: nix store, system binaries, pi/npm/cargo installs, nix.conf
 # Nix: routes through the host nix daemon (NIX_REMOTE=daemon, socket bound
 #      read-only) when one is running — fetches/builds then land in the host
@@ -108,11 +108,19 @@ bwrap_args=(
   # cargo writes under ~/.cargo (registry cache/src, cargo install output) —
   # cargo fetch/build needs it; same accident-not-malice model as ~/.pi.
   --bind "$HOME/.cargo" "$SANDBOX_HOME/.cargo"
+  # Go writes under ~/go (module cache under pkg/mod, go install output
+  # under bin) — go build/test need it so agents don't have to point GOPATH
+  # / GOMODCACHE at /tmp. -try keeps the sandbox working on hosts without a
+  # Go setup; same accident-not-malice model as ~/.cargo.
+  --bind-try "$HOME/go" "$SANDBOX_HOME/go"
   --ro-bind "$HOME/.local" "$SANDBOX_HOME/.local"
   --ro-bind "$HOME/.nix-profile" "$SANDBOX_HOME/.nix-profile"
   --ro-bind "$HOME/.gitconfig" "$SANDBOX_HOME/.gitconfig"
   --tmpfs "$SANDBOX_HOME/.cache"
   --bind-try "$CACHE_HOME/codebase-memory-mcp" "$SANDBOX_HOME/.cache/codebase-memory-mcp"
+  # Go build cache (default GOCACHE): without this every sandbox session
+  # would recompile from scratch, since .cache is a fresh tmpfs.
+  --bind-try "$CACHE_HOME/go-build" "$SANDBOX_HOME/.cache/go-build"
   --tmpfs "$SANDBOX_HOME/.gemini"
   # gh CLI credentials: gh keeps tokens in ~/.config/gh/hosts.yml and rewrites
   # that file on token refresh, so it is read-write (like ~/.pi). Only the gh
@@ -178,7 +186,7 @@ fi
 # (bwrap can't create mount points once the root is read-only).
 bwrap_args+=(
   --setenv HOME "$SANDBOX_HOME"
-  --setenv PATH "$SANDBOX_HOME/.pi/agent/bin:$SANDBOX_HOME/.npm-global/bin:$SANDBOX_HOME/.cargo/bin:$SANDBOX_HOME/.local/bin:$SANDBOX_HOME/.nix-profile/bin:/run/current-system/sw/bin:/bin"
+  --setenv PATH "$SANDBOX_HOME/.pi/agent/bin:$SANDBOX_HOME/.npm-global/bin:$SANDBOX_HOME/.cargo/bin:$SANDBOX_HOME/go/bin:$SANDBOX_HOME/.local/bin:$SANDBOX_HOME/.nix-profile/bin:/run/current-system/sw/bin:/bin"
   --unsetenv PI_SESSION_FILE
   --unsetenv PI_SESSION_ID
   --unsetenv PI_CODING_AGENT

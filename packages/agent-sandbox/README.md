@@ -74,6 +74,8 @@ automatically.
 | `~/.npm-global` | host | read-only | pi and gemini installs (node bundles) |
 | `~/.nix-profile` | host | read-only | node, npm, user-installed nix tools |
 | `~/.cargo` | host | **read-write** | cargo toolchain — registry cache, `cargo install` output (MCP server binaries) |
+| `~/.go` | host | **read-write** | Go toolchain — module cache (`pkg/mod`), `go install` output (`-try` bind: hosts without Go still work) |
+| `/home/sandbox/.cache/go-build` | host | **read-write** | Go build cache (default `GOCACHE`) — shared with the host, so sandboxed builds aren't cold every session |
 | `~/.local` | host | read-only | codebase-memory-mcp binary |
 | `/init`, `/run/WSL` | host | read-only | WSL interop — needed to launch Windows binaries (see Browser tools) |
 | `/mnt/c/…/cmd.exe`, `/mnt/c/…/msedge.exe` | host | read-only | the only Windows executables exposed (username lookup, Edge launcher) |
@@ -100,7 +102,10 @@ project+/tmp-only writes.
 
 ## Verified properties (`./verify-sandbox.sh`)
 
-- Cannot read: `~/.ssh`, `/etc/shadow`, `/root`, other home dirs, host `/tmp`.
+- Cannot read: `~/.ssh`, `/etc/shadow`, `/root`, other home dirs, host
+  `/tmp`. (The host home dir itself appears as an empty mount-point shell
+  holding only the re-exposed `~/.pi` bind — bwrap creates the parent of
+  that mount — but no host content inside it is visible.)
 - Cannot write: `/`, `/etc`, `$HOME`, `/nix/store`, system profile.
 - `~/.pi` is writable, as intended (pi self-manages; config is in git).
 - `~/.config/gh` is visible and writable when the host has a gh login
@@ -108,6 +113,10 @@ project+/tmp-only writes.
 - `~/.cargo` is visible and writable when the host has a cargo install
   (checks skipped otherwise) — so `cargo fetch` / `cargo build` work in the
   sandbox.
+- `~/.go` is visible and writable, and the host's `~/.cache/go-build` is
+  shared, when the host has a Go setup (checks skipped otherwise) — so
+  `go build` / `go test` reuse the host's module and build caches instead of
+  pointing `GOPATH`/`GOCACHE` at `/tmp`.
 - Can read+write: `/app` (and changes propagate to the host) and `/tmp`.
 - `nix-shell -p cowsay` runs end-to-end (via the host nix daemon; skipped when
   the host has no daemon socket).
@@ -204,6 +213,13 @@ project+/tmp-only writes.
     (EROFS)** — cargo's registry cache and `cargo install` output live under
     `~/.cargo`, which was bound read-only. Fixed with a read-write bind (same
     accident-not-malice model as `~/.pi`).
+16. **Go builds cold every session, module cache invisible** — `go build`
+    defaults its build cache to `~/.cache/go-build` (a fresh tmpfs in the
+    sandbox) and its module cache to `~/go/pkg/mod` (invisible), so the only
+    workaround was pointing `GOCACHE`/`GOMODCACHE` at `/tmp`. Fixed with
+    read-write `--bind-try` of `~/.go` and `~/.cache/go-build` (same model as
+    `~/.cargo`; `-try` keeps the sandbox working on hosts without Go).
+    `~/.go/bin` (`go install` output) joined `PATH` next to `~/.cargo/bin`.
 
 ## Trade-offs and limitations (read these)
 
@@ -362,6 +378,6 @@ Caveats:
 ## Files
 
 - `sandbox.sh` — the sandbox wrapper (one bwrap invocation, commented).
-- `verify-sandbox.sh` — boundary verification suite (26 checks; the nix-shell
-  check is skipped when the host has no nix daemon socket, and the two gh
-  checks are skipped when the host has no `~/.config/gh`).
+- `verify-sandbox.sh` — boundary verification suite; the nix-shell check is
+  skipped when the host has no nix daemon socket, and the cargo, go and gh
+  checks are skipped when the host lacks those toolchains.
