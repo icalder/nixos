@@ -14,8 +14,8 @@
 #      store, exactly like running nix as this user on the host.
 # Invisible: everything else on the host (ssh keys, other projects, /root…)
 #
-# User-independent: host paths are resolved from $HOME at runtime; on WSL
-# the Windows username is resolved via cmd.exe (same as browser-start.js).
+# User-independent: host paths are resolved from $HOME at runtime; on WSL the
+# Windows profile name is read off /mnt/c/Users (cmd.exe only as a fallback).
 #
 # Usage: sandbox <command> [args...]
 #   e.g. sandbox pi -p "hello"
@@ -30,6 +30,7 @@ PROJECT_DIR="${PROJECT_DIR:-$PWD}"
 PI_HOME="${PI_HOME:-$HOME/.pi}"
 CACHE_HOME="${CACHE_HOME:-${XDG_CACHE_HOME:-$HOME/.cache}}"
 # WSL interop (browser-tools skill). WSL-only; skipped elsewhere.
+WIN_USERS_DIR="${WIN_USERS_DIR:-/mnt/c/Users}"
 WSL_CMD_EXE="${WSL_CMD_EXE:-/mnt/c/Windows/System32/cmd.exe}"
 EDGE_EXE="${EDGE_EXE:-/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe}"
 # Extra host paths for a particular task, e.g.
@@ -53,23 +54,76 @@ resolve_bwrap() {
   printf '%s' "$path"
 }
 
-# Windows username, same approach as browser-start.js. Only called on WSL.
-resolve_win_user() {
-  local u
-  u=$("$WSL_CMD_EXE" /c 'echo %USERNAME%' 2>/dev/null | tr -d '\r\n' | head -n 1) || return 0
-  [ -n "$u" ] && printf '%s' "$u"
-  return 0
+# --- Windows profile name (WSL) --------------------------------------------
+# Needed *before* bwrap runs: it decides which two Windows dirs to bind, and it
+# is exported into the sandbox because the browser-tools launcher inside cannot
+# look it up (only the profile bound here is visible under /mnt/c/Users).
+
+# A directory the Windows side can resolve. Interop maps a Windows process's
+# cwd to \\wsl.localhost\<distro>\<linux cwd> and refuses the exec ("Invalid
+# argument") when that path is not visible from the host, so every Windows exec
+# here runs from one of these. Only these exact paths count: a directory
+# created inside a private mount namespace stays invisible host-side, even
+# under /tmp, and a bind mount only resolves to the path its source has there.
+interop_cwd() {
+  local d
+  for d in /tmp /var/tmp /; do
+    [ -d "$d" ] && { printf '%s' "$d"; return; }
+  done
+  printf '/'
 }
+
+# How strongly $1 looks like the interactive user's Windows profile; prints
+# nothing for the profiles Windows creates for itself. Mirrors profileScore()
+# in the browser-tools launcher — keep the two in step.
+win_profile_score() {
+  local name="$1" dir score=0
+  case "$(printf '%s' "$name" | tr '[:upper:]' '[:lower:]')" in
+    default* | public* | wdagutilityaccount* | wsiaccount* | "all users"*) return 1 ;;
+  esac
+  dir="$WIN_USERS_DIR/$name"
+  [ -d "$dir/AppData/Local" ] && score=$((score + 2))
+  [ -d "$dir/AppData/Local/Microsoft/Edge/User Data" ] && score=$((score + 4))
+  [ "$score" -gt 0 ] || return 1
+  printf '%s' "$score"
+}
+
+# The interactive user's Windows profile, read off the filesystem: no interop
+# call, so no cwd dependency and no Windows round-trip. Highest score wins,
+# ties go to the most recently touched profile.
+win_user_from_profiles() {
+  local entry name score
+  [ -d "$WIN_USERS_DIR" ] || return 0
+  for entry in "$WIN_USERS_DIR"/*; do
+    [ -d "$entry" ] && [ ! -L "$entry" ] || continue
+    name="${entry##*/}"
+    score="$(win_profile_score "$name")" || continue
+    printf '%s %s %s\n' "$score" "$(stat -c %Y "$entry" 2>/dev/null || echo 0)" "$name"
+  done | sort -k1,1nr -k2,2nr | sed -n '1p' | cut -d' ' -f3-
+}
+
+# Fallback: ask Windows directly. Runs from interop_cwd, never the caller's cwd.
+win_user_from_cmd() {
+  local u
+  [ -x "$WSL_CMD_EXE" ] || return 0
+  u=$(cd "$(interop_cwd)" && "$WSL_CMD_EXE" /c 'echo %USERNAME%' 2>/dev/null | head -n 1 | tr -d '\r\n') || return 0
+  printf '%s' "$u"
+}
+
 WIN_USER="${WIN_USER:-}"
-if [ -z "$WIN_USER" ] && [ -x "$WSL_CMD_EXE" ]; then
-  WIN_USER="$(resolve_win_user)"
+if [ -z "$WIN_USER" ]; then
+  WIN_USER="$(win_user_from_profiles)"
+  [ -n "$WIN_USER" ] || WIN_USER="$(win_user_from_cmd)"
+fi
+if [ -z "$WIN_USER" ] && [ -d /mnt/c ]; then
+  echo "sandbox: no Windows user resolved — the browser-tools skill cannot start Edge. Set WIN_USER=<profile name>." >&2
 fi
 
 BWRAP="${BWRAP:-$(resolve_bwrap)}"
 
-# Base sandbox. No comment lines may appear in the Windows block appended
-# below if you convert it back to a single backslash-continued exec — a #
-# there terminates the command early (bash gotcha).
+# Base sandbox, kept as an array rather than a backslash-continued command
+# line: comments are then safe inside it, and the Windows block below can be
+# appended conditionally.
 bwrap_args=(
   --unshare-all
   --share-net
@@ -129,13 +183,6 @@ bwrap_args=(
   --bind-try "$HOME/.config/gh" "$SANDBOX_HOME/.config/gh"
 )
 
-# WSL/Windows interop (browser-tools skill: launches Windows Edge).
-# PE binaries run via the WSLInterop binfmt handler (interpreter /init) and
-# per-process sockets in /run/WSL; only the entry .exe files need binding
-# (DLLs resolve on the Windows side). /app must exist on the host (sudo
-# mkdir /app, one-time) or the launcher's CWD mapping fails.
-# Appended only when a Windows user resolved; on non-WSL machines the
-# sandbox works without any Windows-side binds.
 # Validate and expand EXTRA_BINDS into --ro-bind/--bind flags. Fails with a
 # clear message instead of a cryptic bwrap error.
 add_extra_binds() {
@@ -155,14 +202,37 @@ add_extra_binds() {
 }
 add_extra_binds
 
+# WSL/Windows interop (browser-tools skill: launches Windows Edge).
+# PE binaries run via the WSLInterop binfmt handler (interpreter /init) and
+# per-process sockets in /run/WSL; only the entry .exe files need binding (DLLs
+# resolve on the Windows side). A Windows process cannot inherit the sandbox's
+# cwd — interop only resolves paths visible from the host — so the launcher
+# pins its own (see interop_cwd) and no longer needs /app to exist host-side.
+# Appended only when a Windows user resolved; on non-WSL machines the sandbox
+# works without any Windows-side binds.
 if [ -n "$WIN_USER" ]; then
+  WIN_PI_DIR="$WIN_USERS_DIR/$WIN_USER/AppData/Local/Pi"
+  WIN_EDGE_DIR="$WIN_USERS_DIR/$WIN_USER/AppData/Local/Microsoft/Edge/User Data"
+  # The skill creates this dir too, but only a host-side mkdir makes it bindable:
+  # bwrap cannot bind a path that does not exist, and inside the sandbox the root
+  # is read-only, so the skill's own mkdir would fail. Guarded on the parent so a
+  # wrong WIN_USER cannot invent directory trees on the drive.
+  if [ ! -e "$WIN_PI_DIR" ] && [ -d "$(dirname "$WIN_PI_DIR")" ]; then
+    mkdir -p "$WIN_PI_DIR" 2>/dev/null || true
+  fi
   bwrap_args+=(
     --ro-bind /init /init
     --ro-bind /run/WSL /run/WSL
     --ro-bind "$WSL_CMD_EXE" "$WSL_CMD_EXE"
     --ro-bind-try "$EDGE_EXE" "$EDGE_EXE"
-    --bind-try "/mnt/c/Users/$WIN_USER/AppData/Local/Pi" "/mnt/c/Users/$WIN_USER/AppData/Local/Pi"
-    --ro-bind-try "/mnt/c/Users/$WIN_USER/AppData/Local/Microsoft/Edge/User Data" "/mnt/c/Users/$WIN_USER/AppData/Local/Microsoft/Edge/User Data"
+    --bind-try "$WIN_PI_DIR" "$WIN_PI_DIR"
+    --ro-bind-try "$WIN_EDGE_DIR" "$WIN_EDGE_DIR"
+    # Hand the launcher the answers it cannot find inside: the profile name and
+    # the exact paths that were bound (it must not guess at others).
+    --setenv WIN_USER "$WIN_USER"
+    --setenv WIN_USERS_DIR "$WIN_USERS_DIR"
+    --setenv WSL_CMD_EXE "$WSL_CMD_EXE"
+    --setenv EDGE_EXE "$EDGE_EXE"
   )
 fi
 

@@ -49,10 +49,12 @@ installs-on-demand via `nix-shell -p bubblewrap` (cached afterwards).
 On NixOS with this flake it is a dependency of the `agent-sandbox` package and
 is also on the system PATH. On this machine bubblewrap 0.11.2 is used.
 
-The script is user-independent: host paths resolve from `$HOME` at runtime,
-and on WSL the Windows username is detected via `cmd.exe` (override with
-`WIN_USER=…`). On non-WSL machines the Windows-side binds are skipped
-automatically.
+The script is user-independent: host paths resolve from `$HOME` at runtime.
+On WSL the Windows profile name is read off `/mnt/c/Users` (the best-matching,
+then most recently touched, real profile wins; `cmd.exe` is the fallback and
+`WIN_USER=…` the override), and it is exported into the sandbox as `WIN_USER`
+so the browser-tools launcher inside does not have to guess. On non-WSL
+machines the Windows-side binds are skipped automatically.
 
 ## What the sandbox looks like
 
@@ -78,7 +80,7 @@ automatically.
 | `/home/sandbox/.cache/go-build` | host | **read-write** | Go build cache (default `GOCACHE`) — shared with the host, so sandboxed builds aren't cold every session |
 | `~/.local` | host | read-only | codebase-memory-mcp binary |
 | `/init`, `/run/WSL` | host | read-only | WSL interop — needed to launch Windows binaries (see Browser tools) |
-| `/mnt/c/…/cmd.exe`, `/mnt/c/…/msedge.exe` | host | read-only | the only Windows executables exposed (username lookup, Edge launcher) |
+| `/mnt/c/…/cmd.exe`, `/mnt/c/…/msedge.exe` | host | read-only | the only Windows executables exposed (profile-name fallback, Edge launcher) |
 | `/mnt/c/Users/<you>/AppData/Local/Pi` | host | **read-write** | Edge browser profile dir used by the browser-tools skill |
 | `/mnt/c/Users/<you>/AppData/Local/Microsoft/Edge/User Data` | host | read-only | source for the skill's `--profile` mode (your real Edge profile — see caveats) |
 | `/proc` | fresh | (writes blocked by userns) | process view |
@@ -174,13 +176,19 @@ project+/tmp-only writes.
     it; PE binaries then run fine from inside (their DLLs resolve on the
     Windows side, so only the entry `.exe` needs binding).
 12. **WSL interop: `Invalid argument` (EINVAL) when CWD is sandbox-only** —
-    the launcher sets the Windows process's CWD to the Linux CWD mapped as
-    `\\wsl.localhost\NixOS\<path>`; if that path doesn't exist on the host
-    (e.g. `/app`, which is a bind that exists only inside the sandbox),
-    launch fails. CWDs that exist on the host (`/tmp`, `/run/WSL`, …) work.
-    Fixed by creating an empty `/app` on the host (`sudo mkdir /app`,
-    one-time) so the Windows-side path exists; the project bind covers it
-    up inside the sandbox.
+    the interop launcher gives the Windows process a CWD mapped as
+    `\\wsl.localhost\<distro>\<linux cwd>`, resolved through the *host's*
+    view of the filesystem. A directory the host cannot see — one created
+    inside the sandbox (`/home/sandbox`, anything under the private `/tmp`), or
+    a project dir on a disk mounted only in the sandbox namespace — has no
+    Windows path, and the exec dies with `Invalid argument` before the target
+    program runs. Two things mislead here: a *successful* run prints `UNC paths
+    are not supported. Defaulting to Windows directory.` and carries on (that
+    warning is not the failure), and a bind mount of a host directory *does*
+    resolve, because the host sees the directory it came from.
+    Fix: every Windows exec pins its CWD to a directory that exists host-side
+    (`/tmp`) — `interop_cwd` in `sandbox.sh`, `interopCwd()` in the browser-tools
+    launcher. That also retires the old one-time `sudo mkdir /app`.
 13. **`gh` reported "You are not logged into any GitHub hosts"** — gh keeps
     its auth in `~/.config/gh/hosts.yml`, but the sandbox only binds selected
     `~` dirs (`.pi`, `.cargo`, …); `~/.config` was invisible. Fixed with a
@@ -281,25 +289,27 @@ What that required (all now in `sandbox.sh`):
    bisection: the `WSLInterop` binfmt handler's interpreter `/init`, the
    per-process interop sockets in `/run/WSL`, and the PE executable itself.
    With those bound read-only, `cmd.exe`/`msedge.exe` run fine from inside.
-2. **`/app` must exist on the host** (one-time: `sudo mkdir /app`). The
-   interop launcher maps the Linux CWD to a Windows path
-   (`\\wsl.localhost\NixOS\app`) and fails with `Invalid argument` if that
-   path doesn't exist on the Windows side. The sandbox bind of your project
-   over `/app` is unaffected; the empty host dir is just the Windows-side
-   anchor. (Any CWD that exists only inside the sandbox breaks interop the
-   same way.)
+2. **A CWD the Windows side can resolve** — interop maps the Linux CWD to
+   `\\wsl.localhost\<distro>\<cwd>` and refuses the exec (`Invalid
+   argument`) when that path is not visible from the host, which is true of
+   anything created inside the sandbox (`/home/sandbox`, the private `/tmp`).
+   So the launcher runs every Windows process from `/tmp` (`interopCwd()`),
+   never from the caller's directory. That replaces the old one-time
+   `sudo mkdir /app`.
 3. **Minimal `/mnt/c` binds** — never the whole Windows filesystem: just
-   `cmd.exe` (username), `msedge.exe` (launcher), the `Pi` profile dir
-   (read-write, where Edge stores its profile and the script cleans
+   `cmd.exe` (profile-name fallback), `msedge.exe` (launcher), the `Pi` profile
+   dir (read-write, where Edge keeps its profile and the launcher clears
    `SingletonLock`), and the real Edge `User Data` dir read-only for
-   `--profile` mode. The Windows username is detected at startup via
-   `cmd.exe` (the same trick the skill uses); `WIN_USER=…` overrides it,
-   and on non-WSL machines all of these binds are skipped.
+   `--profile` mode. The Windows profile name is resolved before bwrap runs
+   (read off `/mnt/c/Users`, `cmd.exe` only as a fallback) and exported as
+   `WIN_USER`, because inside the sandbox only the profile bound here is
+   visible; `WIN_USER=…` overrides it, and on non-WSL machines all of these
+   binds are skipped.
 
-Usage from inside the sandbox (note the real path — see caveat 1):
+Usage from inside the sandbox (either skill path works — see caveat 1):
 
 ```sh
-S=~/.pi/pi-skills/browser-tools
+S=~/.pi/agent/skills/browser-tools
 ./sandbox.sh node $S/browser-start.js            # start Edge (visible window)
 ./sandbox.sh node $S/browser-nav.js https://example.com
 ./sandbox.sh node $S/browser-eval.js 'document.title'
@@ -311,13 +321,10 @@ sandbox.
 
 Caveats:
 
-1. **Dangling skill symlink** — `~/.pi/agent/skills/browser-tools` is a
-   symlink to `~/.pi/pi-skills/browser-tools`; the absolute target doesn't
-   exist inside the sandbox. Invoke scripts via the real
-   `~/.pi/pi-skills/browser-tools/…` path (as above). Optional one-line host
-   fix that works in both environments: make the link relative
-   (`ln -sfn ../pi-skills/browser-tools ~/.pi/agent/skills/browser-tools`) —
-   that's a change to your git-tracked `~/.pi`, so it's left to you.
+1. **Skill path** — `~/.pi/agent/skills/browser-tools` is a symlink to the
+   absolute `~/.pi/pi-skills/browser-tools`. It resolves inside the sandbox
+   because `~/.pi` is re-exposed at its own host path (so absolute links
+   inside it resolve); both paths work.
 2. **Slow first connect** — while Edge is starting, WSL2's localhost
    forwarding can hold the connection attempts (SYN not refused until the
    port is actually bound), so `browser-start.js`'s poll loop can look hung
@@ -362,8 +369,11 @@ Caveats:
   used: they are appended after `--remount-ro /`, so bwrap can't create new
   mount points and fails with `Read-only file system`.)
 - Different pi config: `PI_HOME=…` env var (the `~/.pi` path is parameterised).
-- Different Windows user (WSL): `WIN_USER=…` env var (auto-detected via
-  `cmd.exe` by default).
+- Different Windows setup (WSL): `WIN_USER=…` (otherwise read off
+  `WIN_USERS_DIR`, default `/mnt/c/Users`, falling back to `cmd.exe`),
+  `WIN_USERS_DIR=…`, `WSL_CMD_EXE=…`, `EDGE_EXE=…` env vars. `WIN_USER`,
+  `WSL_CMD_EXE` and `EDGE_EXE` are also exported into the sandbox, so the
+  browser-tools launcher inside uses exactly what was bound.
 - Explicit bubblewrap binary: `BWRAP=…` env var (the package wrapper already pins
   it to the store path; override to test another build).
 - Launcher for `sandbox-verify`: `SANDBOX_BIN=…` env var (the wrapper sets it to the
