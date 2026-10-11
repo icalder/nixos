@@ -65,6 +65,9 @@ resolve_bwrap() {
 # here runs from one of these. Only these exact paths count: a directory
 # created inside a private mount namespace stays invisible host-side, even
 # under /tmp, and a bind mount only resolves to the path its source has there.
+# Only the path *string* is checked, and only at exec time — the child then
+# falls back to C:\Windows, because Windows rejects UNC working directories —
+# so the sandbox's /tmp being a private tmpfs, not the host's, is harmless.
 interop_cwd() {
   local d
   for d in /tmp /var/tmp /; do

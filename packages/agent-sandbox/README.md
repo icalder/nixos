@@ -189,6 +189,13 @@ project+/tmp-only writes.
     Fix: every Windows exec pins its CWD to a directory that exists host-side
     (`/tmp`) — `interop_cwd` in `sandbox.sh`, `interopCwd()` in the browser-tools
     launcher. That also retires the old one-time `sudo mkdir /app`.
+    Only the CWD *string* has to resolve, and only at exec time: once the
+    process is up, Windows rejects its own UNC CWD and puts the child in
+    `C:\Windows` (that is the entire warning), so the sandbox's `/tmp` and the
+    host's never meet — it does not matter that they are different filesystems
+    (tmpfs vs the host's ext4). The consequence to remember is that a Windows
+    child resolves *relative* paths against `C:\Windows`, so pass it absolute
+    paths on both sides (`/mnt/c/…`, `C:\…`), which the launcher does.
 13. **`gh` reported "You are not logged into any GitHub hosts"** — gh keeps
     its auth in `~/.config/gh/hosts.yml`, but the sandbox only binds selected
     `~` dirs (`.pi`, `.cargo`, …); `~/.config` was invisible. Fixed with a
