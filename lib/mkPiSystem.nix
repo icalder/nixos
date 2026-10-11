@@ -26,9 +26,27 @@ let
         boot.kernel.sysctl = {
           "kernel.dmesg_restrict" = 0;
         };
+
+        # profiles/base.nix turns ZFS on for every nixosSystem, which loads the
+        # zfs and spl modules and runs zed on a board that has no pools and
+        # cannot gain one. The set form with mkForce is how nixpkgs says to
+        # switch a single filesystem back off without disturbing the rest.
+        boot.supportedFilesystems = {
+          zfs = pkgs.lib.mkForce false;
+        };
       }
       agenix.nixosModules.default
       ../modules/autoupgrade.nix
+      ../modules/low-ram-rebuild.nix
+      ../modules/sd-card-tuning.nix
+      # modules/adsb-feeder.nix is deliberately NOT imported here. It mentions
+      # services.fr24feed, an option that exists only where flake.nix also adds
+      # fr24feed.nixosModules.fr24feed, i.e. alarmpi and nixos-3a. Importing it
+      # for every Pi breaks the hosts that lack that module: lib.mkIf false
+      # still yields { _type = "if"; content = ...; }, and the module system's
+      # undefined-option check walks the paths a block mentions whether or not
+      # its condition holds, so rpi4-1 fails to evaluate even with the feeder
+      # switched off. Hosts that feed import it themselves.
     ];
   };
 

@@ -10,10 +10,13 @@
 }:
 
 {
-  # imports = [
-  #   # Include the results of the hardware scan.
-  #   ./hardware-configuration.nix
-  # ];
+  imports = [
+    # Owns dump1090-fa, its nginx map, fr24feed and the adsbexchange guest
+    # behind a single adsbFeeder.enable switch. Imported per host rather than
+    # by lib/mkPiSystem.nix, because the module needs the fr24feed module that
+    # flake.nix only supplies to hosts that actually feed.
+    ../../modules/adsb-feeder.nix
+  ];
 
   boot.kernelParams = [
     "snd_usb_audio.index=2"
@@ -30,13 +33,36 @@
   ];
 
   # In-RAM compressed swap instead of relying on the SD-backed /swapfile.
-  # A nix upgrade runs 4 parallel builds that spike RAM on this 512 MB Pi;
-  # with zram first, that pressure is handled in RAM rather than generating
-  # heavy disk I/O on the (marginal) SD card during updates.
+  # A nix upgrade runs builds that spike RAM on this 865 MiB Pi; with zram
+  # first, that pressure is handled in RAM rather than generating heavy disk
+  # I/O on the SD card during updates.
   zramSwap = {
     enable = true;
     memoryPercent = 75; # cap the device at 3/4 of RAM; zstd keeps effective cap high
   };
+
+  # Peak observed for a weekly nixos-upgrade: 649 MiB RSS and 962 MiB swap, on
+  # a machine with 865 MiB total. Those numbers are survivable on their own;
+  # what killed the box was doing it while the SD card was also absorbing up to
+  # 7.9 GiB of writes. Cap the build side so it cannot outgrow the machine.
+  lowRamRebuild = {
+    enable = true;
+    throttleAtMiB = 448;
+    killAtMiB = 576;
+    swapBudgetMiB = 768;
+    pauseBelow = 224 * 1024 * 1024;
+    resumeAt = 448 * 1024 * 1024;
+  };
+
+  # No runtime watchdog, for now. The weekly hang is a userspace I/O stall, so
+  # nothing resets the board and it sat unreachable for hours until the power
+  # was pulled, and /dev/watchdog0 looks like an easy fix. It is available --
+  # systemd already arms this same device with a 10min timeout on every reboot
+  # (RebootWatchdogSec default), so the BCM2835 timer is not the ~16s limit I
+  # first assumed from max_timeout=0. RuntimeWatchdogSec is left off because a
+  # 15min stall rebooting the box mid-`nixos-rebuild switch` is how the card
+  # gets corrupted. Revisit once a real run has been observed under the new
+  # memory ceilings. See ALARMPI-ISSUES.md, 8.1.
 
   age.secrets = {
     itcalde.file = ../../secrets/itcalde.age;
@@ -116,9 +142,8 @@
   nix.channel.enable = false;
 
   # Cap concurrent build jobs so peak RAM and concurrent disk I/O stay
-  # manageable during upgrades on this low-RAM Pi (reduces the memory
-  # pressure that previously overloaded I/O and hung the machine).
-  nix.maxJobs = 2;
+  # manageable during upgrades on this low-RAM Pi. See modules/low-ram-rebuild.nix
+  # for the full set of limits (jobs, cores, memory ceilings, I/O priority).
 
   # programs.firefox.enable = true;
   programs.git.enable = true;
@@ -173,46 +198,12 @@
     };
   };
 
-  services.dump1090-fa.enable = false;
-  services.dump1090-fa.extraArgs = [
-    "--quiet"
-    "--adaptive-range"
-    "--lat"
-    "51.87696"
-    "--lon"
-    "-2.20132"
-  ];
-  #services.dump1090-fa.extraArgs = [ "--quiet" "--gain -10" ];
-  # systemd.services.dump1090-fa.serviceConfig = {
-  #   PrivateNetwork = lib.mkForce false;
-  #   Restart = "always";
-  #   RestartSec = "5s";
-  #   # Leave CPU 0 for system interrupts and other critical tasks
-  #   CPUAffinity = "1 2 3";
-  # };
-
-  services.nginx = {
-    enable = false;
-    virtualHosts."default" = {
-      listen = [
-        {
-          addr = "0.0.0.0";
-          port = 80;
-        }
-      ];
-      locations."/dump1090" = {
-        return = "301 /dump1090/";
-      };
-      locations."/dump1090/data/" = {
-        alias = "/run/dump1090-fa/";
-        extraConfig = "expires off;";
-      };
-      locations."/dump1090/" = {
-        alias = "${pkgs.dump1090-fa}/share/dump1090/";
-        index = "index.html";
-      };
-    };
-  };
+  # dump1090-fa, its nginx map, fr24feed and the adsbexchange guest all live in
+  # modules/adsb-feeder.nix, shared with nixos-3a. This box is the standby
+  # feeder, so the switch is off; flip it to true here and to false on nixos-3a
+  # to fail over. The guest costs roughly 60 MiB of resident RAM, which this
+  # machine cannot spare while it is rebuilding.
+  adsbFeeder.enable = false;
 
   services.ubc125 = {
     enable = true;
@@ -220,48 +211,6 @@
     # device = "/dev/ttyACM0";          # default: auto-detect by USB id
     # audioDevice = "hw:2";             # default: the Pi's USB mic
     declick = true; # default: false, experimental audio de-clicker
-  };
-
-  # Prepare adsbexchange machine image during system activation.
-  # Has to be done here because ExecStartPre cannnot run mknod on /var/lib/machines.
-  system.activationScripts.prepare-adsbexchange-machine = {
-    deps = [
-      "users"
-      "groups"
-    ]; # Ensure users/groups are set up first
-    text = ''
-      IMAGE_DEST="/var/lib/machines/adsbexchange"
-      if [ ! -d "$IMAGE_DEST" ]; then
-        echo "Deploying adsbexchange machine image during system activation..."
-        mkdir -p "$IMAGE_DEST"
-        ${pkgs.gnutar}/bin/tar --use-compress-program=${pkgs.gzip}/bin/gzip -xpf ${pkgs.adsbexchange-fs}/rootfs.tar.gz -C "$IMAGE_DEST" --numeric-owner --xattrs --xattrs-include='*'
-      fi
-    '';
-  };
-
-  systemd.targets.machines.enable = true;
-  systemd.nspawn.adsbexchange = {
-    enable = false;
-    execConfig = {
-      Boot = true;
-    };
-    networkConfig = {
-      VirtualEthernet = "no";
-    };
-    filesConfig = {
-      BindReadOnly = [ "/etc/resolv.conf:/etc/resolv.conf" ];
-    };
-  };
-  systemd.services."systemd-nspawn@adsbexchange" = {
-    enable = false;
-    wantedBy = [ "machines.target" ];
-    # https://mynixos.com/nixpkgs/option/systemd.mounts.*.overrideStrategy
-    overrideStrategy = "asDropin";
-  };
-
-  services.fr24feed = {
-    enable = false;
-    fr24key = config.age.secrets.fr24key.path;
   };
 
   # environment.etc."nixos" = {

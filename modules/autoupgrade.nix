@@ -12,9 +12,15 @@
     allowReboot = true; # Optional: reboot for kernel updates
   };
 
+  # Keep garbage collection out of the upgrade window. Both are write-heavy, and
+  # on an SD card they compete for the same queue; collecting garbage while a
+  # rebuild is unpacking a closure is how a Sunday night turns into a stalled
+  # card. Monday midnight is ~22h clear of the Sunday upgrade, and the delay
+  # stops every host in the fleet trimming at the same moment.
   nix.gc = {
     automatic = true;
-    dates = "weekly";
+    dates = "Mon 00:00";
     options = "--delete-older-than 14d"; # Deletes generations older than 2 weeks
+    randomizedDelaySec = "90min";
   };
 }

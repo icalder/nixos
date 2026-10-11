@@ -10,10 +10,13 @@
 }:
 
 {
-  # imports = [
-  #   # Include the results of the hardware scan.
-  #   ./hardware-configuration.nix
-  # ];
+  imports = [
+    # Owns dump1090-fa, its nginx map, fr24feed and the adsbexchange guest
+    # behind a single adsbFeeder.enable switch. Imported per host rather than
+    # by lib/mkPiSystem.nix, because the module needs the fr24feed module that
+    # flake.nix only supplies to hosts that actually feed.
+    ../../modules/adsb-feeder.nix
+  ];
 
   swapDevices = [
     {
@@ -28,12 +31,6 @@
       file = ../../secrets/wireless.conf.age;
       owner = "root";
       group = "wpa_supplicant";
-      mode = "0440";
-    };
-    fr24key = {
-      file = ../../secrets/fr24key.age;
-      owner = "root";
-      group = "fr24feed";
       mode = "0440";
     };
   };
@@ -127,6 +124,16 @@
   ];
   nix.channel.enable = false;
 
+  # This host builds its own upgrades: nixos-upgrade.timer fires weekly and the
+  # build runs here, not on the x86 box. With 375 MiB and no zram, one compiler
+  # thread per derivation is the difference between a slow build and a box that
+  # wedges in uninterruptible sleep. lowRamRebuild used to supply this; it is now
+  # opt-in for alarmpi only, so the serialisation is stated here instead. The
+  # cgroup ceilings that module also sets are deliberately not reproduced: on a
+  # 375 MiB machine they sat above the machine's own RAM and protected nothing.
+  nix.settings.max-jobs = 1;
+  nix.settings.cores = 1;
+
   # programs.firefox.enable = true;
   programs.git.enable = true;
   programs.nix-ld.enable = true;
@@ -152,86 +159,11 @@
     fi
   '';
 
-  services.dump1090-fa.enable = true;
-  services.dump1090-fa.extraArgs = [
-    "--quiet"
-    "--adaptive-range"
-    "--lat"
-    "51.87696"
-    "--lon"
-    "-2.20132"
-  ];
-  #services.dump1090-fa.extraArgs = [ "--quiet" "--gain -10" ];
-  systemd.services.dump1090-fa.serviceConfig = {
-    PrivateNetwork = lib.mkForce false;
-    Restart = "always";
-    RestartSec = "5s";
-  };
-
-  services.nginx = {
-    enable = true;
-    virtualHosts."default" = {
-      listen = [
-        {
-          addr = "0.0.0.0";
-          port = 80;
-        }
-      ];
-      locations."/dump1090" = {
-        return = "301 /dump1090/";
-      };
-      locations."/dump1090/data/" = {
-        alias = "/run/dump1090-fa/";
-        extraConfig = "expires off;";
-      };
-      locations."/dump1090/" = {
-        alias = "${pkgs.dump1090-fa}/share/dump1090/";
-        index = "index.html";
-      };
-    };
-  };
-
-  # Prepare adsbexchange machine image during system activation.
-  # Has to be done here because ExecStartPre cannnot run mknod on /var/lib/machines.
-  system.activationScripts.prepare-adsbexchange-machine = {
-    deps = [
-      "users"
-      "groups"
-    ]; # Ensure users/groups are set up first
-    text = ''
-      IMAGE_DEST="/var/lib/machines/adsbexchange"
-      if [ ! -d "$IMAGE_DEST" ]; then
-        echo "Deploying adsbexchange machine image during system activation..."
-        mkdir -p "$IMAGE_DEST"
-        ${pkgs.gnutar}/bin/tar --use-compress-program=${pkgs.gzip}/bin/gzip -xpf ${pkgs.adsbexchange-fs}/rootfs.tar.gz -C "$IMAGE_DEST" --numeric-owner --xattrs --xattrs-include='*'
-      fi
-    '';
-  };
-
-  systemd.targets.machines.enable = true;
-  systemd.nspawn.adsbexchange = {
-    enable = true;
-    execConfig = {
-      Boot = true;
-    };
-    networkConfig = {
-      VirtualEthernet = "no";
-    };
-    filesConfig = {
-      BindReadOnly = [ "/etc/resolv.conf:/etc/resolv.conf" ];
-    };
-  };
-  systemd.services."systemd-nspawn@adsbexchange" = {
-    enable = false;
-    wantedBy = [ "machines.target" ];
-    # https://mynixos.com/nixpkgs/option/systemd.mounts.*.overrideStrategy
-    overrideStrategy = "asDropin";
-  };
-
-  services.fr24feed = {
-    enable = true;
-    fr24key = config.age.secrets.fr24key.path;
-  };
+  # The whole ADS-B feeder chain (dump1090-fa, its nginx map, fr24feed and the
+  # adsbexchange guest) lives in modules/adsb-feeder.nix, shared with alarmpi.
+  # This box is the primary feeder; set the same flag to true on alarmpi and to
+  # false here to fail over.
+  adsbFeeder.enable = true;
 
   # environment.etc."nixos" = {
   #   source = ../../.;
