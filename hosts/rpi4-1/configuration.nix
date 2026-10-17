@@ -101,6 +101,18 @@
       # "--node-ip=192.168.1.x"
     ];
   };
+
+  # In-cluster zot registry (infra/zot-registry in the k3s repo). Plain HTTP on
+  # the LAN, so containerd needs the mirror to opt out of TLS.
+  environment.etc."rancher/k3s/registries.yaml".text = ''
+    mirrors:
+      "192.168.1.48:5000":
+        endpoint:
+          - "http://192.168.1.48:5000"
+      "192.168.1.51:5000":
+        endpoint:
+          - "http://192.168.1.51:5000"
+  '';
   systemd.tmpfiles.rules = [
     "d /data 0755 root root -"
   ];

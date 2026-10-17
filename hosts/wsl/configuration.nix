@@ -122,6 +122,24 @@ in
     defaultNetwork.settings.dns_enabled = true;
   };
 
+  # The in-cluster zot registry (infra/zot-registry in the k3s repo) serves
+  # plain HTTP on the LAN, so both engines have to allow it without TLS.
+  virtualisation.docker.daemon.settings = {
+    insecure-registries = [ "192.168.1.48:5000" "192.168.1.51:5000" ];
+  };
+
+  environment.etc."containers/registries.conf.d/10-lan-registry.conf".text = ''
+    [[registry]]
+    prefix = "192.168.1.48:5000"
+    location = "192.168.1.48:5000"
+    insecure = true
+
+    [[registry]]
+    prefix = "192.168.1.51:5000"
+    location = "192.168.1.51:5000"
+    insecure = true
+  '';
+
   # Include XDG ~/.local/bin in PATH, so that scripts installed there are available in the shell
   environment.localBinInPath = true;
 
