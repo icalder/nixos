@@ -107,12 +107,6 @@ in
     #     '';
   };
 
-  # Optional: Let Podman search Docker Hub by default
-  xdg.configFile."containers/registries.conf".text = ''
-    [registries.search]
-    registries = ['docker.io', 'quay.io']
-  '';
-
   # Home Manager can also manage your environment variables through
   # 'home.sessionVariables'. These will be explicitly sourced when using a
   # shell provided by Home Manager. If you don't want to manage your shell
@@ -190,6 +184,19 @@ in
 
   services.ssh-agent.enable = true;
   services.podman.enable = true;
+
+  # This module writes ~/.config/containers/registries.conf, which replaces
+  # /etc/containers/registries.conf and its registries.conf.d drop-ins for
+  # rootless podman and skopeo. The in-cluster zot registry (k3s repo,
+  # infra/zot-registry) serves plain HTTP on the LAN, so it must be listed here.
+  services.podman.settings.registries.search = [
+    "docker.io"
+    "quay.io"
+  ];
+  services.podman.settings.registries.insecure = [
+    "192.168.1.48:5000"
+    "192.168.1.51:5000"
+  ];
 
   home.activation = {
 
