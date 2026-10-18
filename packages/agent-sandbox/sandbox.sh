@@ -8,7 +8,8 @@
 # Writable: /app (the project dir), /tmp (private tmpfs), ~/.pi, ~/.cargo,
 #           ~/.go (module cache, go install, build cache), ~/.config/gh,
 #           /nix/var/nix (private tmpfs, nix client state in local mode)
-# Read-only: nix store, system binaries, pi/npm/cargo installs, nix.conf
+# Read-only: nix store, system binaries, pi/npm/cargo installs, nix.conf,
+#           kubeconfig (kubectl cluster access)
 # Nix: routes through the host nix daemon (NIX_REMOTE=daemon, socket bound
 #      read-only) when one is running — fetches/builds then land in the host
 #      store, exactly like running nix as this user on the host.
@@ -29,6 +30,14 @@ SANDBOX_HOME="/home/sandbox"
 PROJECT_DIR="${PROJECT_DIR:-$PWD}"
 PI_HOME="${PI_HOME:-$HOME/.pi}"
 CACHE_HOME="${CACHE_HOME:-${XDG_CACHE_HOME:-$HOME/.cache}}"
+# kubectl cluster credentials. The kubectl binary is on the system path
+# (already bound read-only); kubectl reads $HOME/.kube/config by default, so
+# the host's file is bound read-only at that default location inside the
+# sandbox and the rest of ~/.kube stays invisible. KUBE_CONFIG overrides the
+# host-side path (also covers hosts whose config lives elsewhere via a
+# KUBECONFIG env var; the inherited KUBECONFIG is unset below so kubectl uses
+# the default lookup path). Note: only a single-file path is supported.
+KUBE_CONFIG="${KUBE_CONFIG:-${KUBECONFIG:-$HOME/.kube/config}}"
 # WSL interop (browser-tools skill). WSL-only; skipped elsewhere.
 WIN_USERS_DIR="${WIN_USERS_DIR:-/mnt/c/Users}"
 WSL_CMD_EXE="${WSL_CMD_EXE:-/mnt/c/Windows/System32/cmd.exe}"
@@ -173,6 +182,10 @@ bwrap_args=(
   --ro-bind "$HOME/.local" "$SANDBOX_HOME/.local"
   --ro-bind "$HOME/.nix-profile" "$SANDBOX_HOME/.nix-profile"
   --ro-bind "$HOME/.gitconfig" "$SANDBOX_HOME/.gitconfig"
+  # kubectl config, bound at kubectl's default lookup path ($HOME/.kube/config
+  # inside the sandbox). Read-only: cluster access yes, credential tampering no.
+  # -try keeps the sandbox working on hosts without a kubeconfig.
+  --ro-bind-try "$KUBE_CONFIG" "$SANDBOX_HOME/.kube/config"
   --tmpfs "$SANDBOX_HOME/.cache"
   --bind-try "$CACHE_HOME/codebase-memory-mcp" "$SANDBOX_HOME/.cache/codebase-memory-mcp"
   # Go build cache (default GOCACHE): without this every sandbox session
@@ -263,6 +276,9 @@ bwrap_args+=(
   --unsetenv PI_SESSION_FILE
   --unsetenv PI_SESSION_ID
   --unsetenv PI_CODING_AGENT
+  # The bound kubeconfig sits at kubectl's default lookup path; a KUBECONFIG
+  # inherited from the host would point at an invisible host path.
+  --unsetenv KUBECONFIG
   # The sandbox is the safety net: tell pi's per-command and per-write guard
   # extensions (command-guardian, file-write-approval) to stand down.
   --setenv PI_SANDBOX 1

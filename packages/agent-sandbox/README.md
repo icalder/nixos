@@ -79,6 +79,7 @@ machines the Windows-side binds are skipped automatically.
 | `~/.go` | host | **read-write** | Go toolchain — module cache (`pkg/mod`), `go install` output (`-try` bind: hosts without Go still work) |
 | `/home/sandbox/.cache/go-build` | host | **read-write** | Go build cache (default `GOCACHE`) — shared with the host, so sandboxed builds aren't cold every session |
 | `~/.local` | host | read-only | codebase-memory-mcp binary |
+| `/home/sandbox/.kube/config` | host `~/.kube/config` | read-only | kubectl cluster credentials — the binary comes from `~/.nix-profile`/system sw (already on PATH); rest of `~/.kube` invisible |
 | `/init`, `/run/WSL` | host | read-only | WSL interop — needed to launch Windows binaries (see Browser tools) |
 | `/mnt/c/…/cmd.exe`, `/mnt/c/…/msedge.exe` | host | read-only | the only Windows executables exposed (profile-name fallback, Edge launcher) |
 | `/mnt/c/Users/<you>/AppData/Local/Pi` | host | **read-write** | Edge browser profile dir used by the browser-tools skill |
@@ -119,6 +120,9 @@ project+/tmp-only writes.
   shared, when the host has a Go setup (checks skipped otherwise) — so
   `go build` / `go test` reuse the host's module and build caches instead of
   pointing `GOPATH`/`GOCACHE` at `/tmp`.
+- `~/.kube/config` is visible and read-only when the host has a kubeconfig
+  (checks skipped otherwise) — so `kubectl` can read the cluster config but
+  not modify or delete it.
 - Can read+write: `/app` (and changes propagate to the host) and `/tmp`.
 - `nix-shell -p cowsay` runs end-to-end (via the host nix daemon; skipped when
   the host has no daemon socket).
@@ -376,6 +380,9 @@ Caveats:
   used: they are appended after `--remount-ro /`, so bwrap can't create new
   mount points and fails with `Read-only file system`.)
 - Different pi config: `PI_HOME=…` env var (the `~/.pi` path is parameterised).
+- Different kubeconfig: `KUBE_CONFIG=…` env var (defaults to the host's
+  `KUBECONFIG` if set, else `~/.kube/config`; bound read-only at kubectl's
+  default lookup path inside the sandbox, single file only).
 - Different Windows setup (WSL): `WIN_USER=…` (otherwise read off
   `WIN_USERS_DIR`, default `/mnt/c/Users`, falling back to `cmd.exe`),
   `WIN_USERS_DIR=…`, `WSL_CMD_EXE=…`, `EDGE_EXE=…` env vars. `WIN_USER`,

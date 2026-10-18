@@ -99,6 +99,18 @@ else
   echo "SKIP  gh config checks (no ~/.config/gh on host)"
 fi
 
+# kubectl config is bound read-only at kubectl's default lookup path;
+# skipped on hosts without a kubeconfig.
+echo "== kubectl config (~/.kube/config) =="
+KUBE_CONFIG="${KUBE_CONFIG:-${KUBECONFIG:-$HOST_HOME/.kube/config}}"
+if [ -f "$KUBE_CONFIG" ]; then
+  check "/home/sandbox/.kube/config visible (kubectl)" 0 "$(in_sandbox 'test -f /home/sandbox/.kube/config')"
+  check "/home/sandbox/.kube/config read-only"         1 "$(in_sandbox 'rm -f /home/sandbox/.kube/config 2>/dev/null')"
+  check "kubectl reads the bound config"              0 "$(in_sandbox 'command -v kubectl >/dev/null && kubectl config view >/dev/null')"
+else
+  echo "SKIP  kubectl config checks (no kubeconfig on host)"
+fi
+
 echo "== Project dir: real bind mount to host =="
 echo "host-side-content" > .v-bindfile
 check "sandbox reads host file"               0 "$(in_sandbox 'grep -q host-side-content /app/.v-bindfile')"
