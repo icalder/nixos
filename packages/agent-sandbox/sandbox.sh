@@ -5,11 +5,13 @@
 # malicious activity. pi's config lives in git, so it is bound read-write
 # (pi sometimes needs to manage its own extensions/skills).
 #
-# Writable: /app (the project dir), /tmp (private tmpfs), ~/.pi, ~/.cargo,
-#           ~/.go (module cache, go install, build cache), ~/.config/gh,
+# Writable: /app (the project dir), /tmp (private tmpfs, also the container
+#           image store), ~/.pi, ~/.cargo, ~/.go (module cache, go install,
+#           build cache), ~/.config/gh, ~/.config/containers (registry config),
 #           /nix/var/nix (private tmpfs, nix client state in local mode)
 # Read-only: nix store, system binaries, pi/npm/cargo installs, nix.conf,
-#           kubeconfig (kubectl cluster access)
+#           kubeconfig (kubectl cluster access), /sys/fs/cgroup, ~/.docker
+#           (registry credentials for podman/skopeo)
 # Nix: routes through the host nix daemon (NIX_REMOTE=daemon, socket bound
 #      read-only) when one is running — fetches/builds then land in the host
 #      store, exactly like running nix as this user on the host.
@@ -38,6 +40,29 @@ CACHE_HOME="${CACHE_HOME:-${XDG_CACHE_HOME:-$HOME/.cache}}"
 # KUBECONFIG env var; the inherited KUBECONFIG is unset below so kubectl uses
 # the default lookup path). Note: only a single-file path is supported.
 KUBE_CONFIG="${KUBE_CONFIG:-${KUBECONFIG:-$HOME/.kube/config}}"
+# Container images (podman/skopeo: import, tag, push — not pull/run/build, see
+# README). Storage/engine config shipped with the package; the wrapper sets
+# SANDBOX_CONTAINER_CONFIG_DIR, a checkout falls back to the sibling containers/.
+CONTAINER_CONFIG_DIR="${SANDBOX_CONTAINER_CONFIG_DIR:-}"
+if [ -z "$CONTAINER_CONFIG_DIR" ]; then
+  CONTAINER_CONFIG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/containers"
+fi
+# Where that dir appears inside the sandbox. Fixed path, so the value handed to
+# CONTAINERS_STORAGE_CONF/CONTAINERS_CONF is the same whether the config comes
+# from the store (installed) or from a checkout (invisible there, hence the bind).
+SANDBOX_CONTAINER_CONF="/run/agent-sandbox/containers"
+# Registry credentials. podman and skopeo read $HOME/.docker/config.json, so the
+# host's file is bound read-only at that path inside the sandbox (the inherited
+# DOCKER_CONFIG is unset below, same trick as KUBECONFIG). Docker Desktop-style
+# credential helpers cannot work here (no host binaries), so only the file's own
+# `auths` entries are usable. DOCKER_CONFIG_HOST overrides the host-side path.
+DOCKER_CONFIG_HOST="${DOCKER_CONFIG_HOST:-$HOME/.docker/config.json}"
+# podman refuses to start when $XDG_RUNTIME_DIR is missing or not owned by it,
+# and it keeps per-session state (locks, the file event log, containers/auth.json)
+# in there. The host's runtime dir stays invisible on purpose — it holds agent
+# sockets (ssh-agent) and other session-private files — so a private tmpfs is
+# mounted at the inherited path instead.
+SANDBOX_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 # WSL interop (browser-tools skill). WSL-only; skipped elsewhere.
 WIN_USERS_DIR="${WIN_USERS_DIR:-/mnt/c/Users}"
 WSL_CMD_EXE="${WSL_CMD_EXE:-/mnt/c/Windows/System32/cmd.exe}"
@@ -265,6 +290,56 @@ if [ -S "$NIX_DAEMON_SOCKET" ]; then
   bwrap_args+=(
     --ro-bind /nix/var/nix/daemon-socket /nix/var/nix/daemon-socket
     --setenv NIX_REMOTE "${NIX_REMOTE:-daemon}"
+  )
+fi
+
+# --- container images (podman / skopeo) -------------------------------------
+# Enough for: importing a rootfs tarball, tagging, and pushing to a registry
+# (also `podman save`/`skopeo copy`, which never touch the image store).
+#
+# What is impossible, and why: `podman pull` / `run` / `build` / `load` of a
+# normal image. Extracting an image's layers means chown()ing files to many
+# uids/gids, and here exactly one uid is mapped with no capabilities in any user
+# namespace. The setuid newuidmap/newgidmap helpers cannot fill the gap: inside a
+# user namespace a setuid binary whose owner is unmapped has its setuid bit
+# ignored, so they fail EPERM and a subordinate uid range can never be mapped.
+# `import` works only because a tarball whose entries are all uid 0/gid 0 fits
+# the single mapping (`tar --owner=0 --group=0 --numeric-owner`). Details and
+# the escape hatch that was rejected: README "Container images".
+if [ -d "$CONTAINER_CONFIG_DIR" ]; then
+  bwrap_args+=(
+    # podman statfs()s /sys/fs/cgroup during startup and aborts with a bare
+    # "no such file or directory" when the path is missing. Read-only suffices:
+    # the cgroup manager is disabled, so nothing is ever written here.
+    --ro-bind /sys/fs/cgroup /sys/fs/cgroup
+    # See the header for why the runtime dir is a private tmpfs rather than a
+    # bind of the host's.
+    --tmpfs "$SANDBOX_RUNTIME_DIR"
+    # The two config files live in the store when installed (already readable)
+    # and in the checkout otherwise, so bind them at a fixed path either way.
+    --ro-bind "$CONTAINER_CONFIG_DIR" "$SANDBOX_CONTAINER_CONF"
+    # Host container config, so the sandbox sees the host's registry setup
+    # (search list, insecure registries, signature policy). Read-write because
+    # `podman login --store` writes auth.json here, as gh does with hosts.yml;
+    # home-manager owns those files and they are symlinks into /nix/store, which
+    # resolves because the store is bound. -try: hosts without them still work.
+    --bind-try "$HOME/.config/containers" "$SANDBOX_HOME/.config/containers"
+    # System-level equivalents of the above (no secrets in them).
+    --ro-bind-try /etc/containers/policy.json /etc/containers/policy.json
+    --ro-bind-try /etc/containers/registries.conf /etc/containers/registries.conf
+    --ro-bind-try /etc/containers/registries.conf.d /etc/containers/registries.conf.d
+    # Registry credentials for podman/skopeo (read-only: pushing needs read
+    # access, and `podman login` writes to the runtime dir, not here).
+    --ro-bind-try "$DOCKER_CONFIG_HOST" "$SANDBOX_HOME/.docker/config.json"
+    --setenv XDG_RUNTIME_DIR "$SANDBOX_RUNTIME_DIR"
+    # containers/storage stages layer writes in /var/tmp, which is invisible
+    # here; /tmp is the sandbox's only scratch. Applies to every command in the
+    # session, which is the intent — a TMPDIR inherited from the host usually
+    # points at a path the sandbox cannot see.
+    --setenv TMPDIR /tmp
+    --unsetenv DOCKER_CONFIG
+    --setenv CONTAINERS_STORAGE_CONF "$SANDBOX_CONTAINER_CONF/storage.conf"
+    --setenv CONTAINERS_CONF "$SANDBOX_CONTAINER_CONF/containers.conf"
   )
 fi
 

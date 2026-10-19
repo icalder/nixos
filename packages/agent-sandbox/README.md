@@ -61,7 +61,7 @@ machines the Windows-side binds are skipped automatically.
 | Path in sandbox | Source | Access | Why |
 |---|---|---|---|
 | `/app` | your project dir (`$PWD`) | **read-write** | the agent's workspace; a real bind mount, edits land on the host |
-| `/tmp` | fresh tmpfs | **read-write** | private scratch, dies with the sandbox |
+| `/tmp` | fresh tmpfs | **read-write** | private scratch, dies with the sandbox; also the container image store (`/tmp/containers`) |
 | `/home/sandbox/.pi` | host | **read-write** | pi's config, extensions, skills, sessions — pi self-manages (config is in git) |
 | `/home/sandbox/.cache/codebase-memory-mcp` | host | **read-write** | codebase-memory index store — sandboxed runs share the host's indexed projects |
 | `/home/sandbox/.config/gh` | host | **read-write** | gh CLI credentials (`hosts.yml`) — gh rewrites the file on token refresh, like `~/.pi` |
@@ -80,6 +80,12 @@ machines the Windows-side binds are skipped automatically.
 | `/home/sandbox/.cache/go-build` | host | **read-write** | Go build cache (default `GOCACHE`) — shared with the host, so sandboxed builds aren't cold every session |
 | `~/.local` | host | read-only | codebase-memory-mcp binary |
 | `/home/sandbox/.kube/config` | host `~/.kube/config` | read-only | kubectl cluster credentials — the binary comes from `~/.nix-profile`/system sw (already on PATH); rest of `~/.kube` invisible |
+| `/sys/fs/cgroup` | host | read-only | podman `statfs()`s it at startup and aborts when the path is missing; nothing is written (cgroup manager disabled) |
+| `$XDG_RUNTIME_DIR` (default `/run/user/<uid>`) | fresh tmpfs | **read-write** | podman refuses to start without a private runtime dir owned by it — the host's (ssh-agent and friends) stays invisible |
+| `/run/agent-sandbox/containers` | this repo's `containers/` | read-only | storage/engine config podman is pointed at (`CONTAINERS_STORAGE_CONF`, `CONTAINERS_CONF`) |
+| `/home/sandbox/.config/containers` | host | **read-write** | registry config, signature policy, `podman login --store` output (home-manager owns these; the symlinks resolve via the bound store) |
+| `/home/sandbox/.docker/config.json` | host | read-only | registry credentials — podman/skopeo read Docker's config for `auths` |
+| `/etc/containers/{policy.json,registries.conf,registries.conf.d}` | host | read-only | system-level signature policy and registry config (`-try`: hosts without them still work) |
 | `/init`, `/run/WSL` | host | read-only | WSL interop — needed to launch Windows binaries (see Browser tools) |
 | `/mnt/c/…/cmd.exe`, `/mnt/c/…/msedge.exe` | host | read-only | the only Windows executables exposed (profile-name fallback, Edge launcher) |
 | `/mnt/c/Users/<you>/AppData/Local/Pi` | host | **read-write** | Edge browser profile dir used by the browser-tools skill |
@@ -103,6 +109,77 @@ to manage its own config (extensions, skills), sessions persist, and anything
 stray is recoverable from git. The one deliberate exception to
 project+/tmp-only writes.
 
+## Container images (podman: import / tag / push)
+
+The sandbox can run rootless podman well enough to **import a rootfs tarball,
+tag it, and push it to a registry** — plus anything that never touches the
+image store (`podman save`, `skopeo copy`, `skopeo inspect`). What it cannot do
+is **pull, run, build or load a normal image**, for a reason that is structural
+rather than a missing bind — details below, and the checks that pin this down are
+in `verify-sandbox.sh`.
+
+```sh
+# from the project dir, inside the sandbox:
+tar -C rootfs --owner=0 --group=0 --numeric-owner -czf rootfs.tgz .   # uid 0 is required
+podman import rootfs.tgz registry.example.com/team/app:1
+podman push registry.example.com/team/app:1        # creds from ~/.docker/config.json
+podman save  --output /tmp/app.tar registry.example.com/team/app:1
+skopeo inspect --tls-verify=false docker://registry.example.com/team/app:1
+```
+
+What makes it work (`sandbox.sh`, plus `containers/storage.conf` and
+`containers/containers.conf`):
+
+- **`--ro-bind /sys/fs/cgroup`** — podman `statfs()`s it during startup and
+  aborts with a bare `no such file or directory` when the path is absent.
+- **`--tmpfs $XDG_RUNTIME_DIR`** — podman refuses to run without a writable
+  runtime dir owned by itself. A private tmpfs, *not* a bind of the host's
+  `/run/user/<uid>`: that one holds ssh-agent and other session-private sockets.
+- **`TMPDIR=/tmp`** — containers/storage stages work in `/var/tmp`, which is
+  invisible here, and `ENOENT` on a temp dir surfaces as a podman call that fails
+  with no message at all.
+- **`vfs` store in `/tmp/containers`** — the sandboxed process has no
+  capabilities in any user namespace, so it cannot mount; overlay and
+  fuse-overlayfs are out. The store is per-session (tmpfs) and deliberately not
+  the host's rootless store, whose layer files are owned by subuids this
+  namespace cannot read.
+- **`cgroup_manager = "disabled"`, `events_logger = "file"`** — `systemd` needs a
+  D-Bus session bus, `cgroupfs` needs to write `/sys/fs/cgroup` (bound read-only),
+  and journald needs the host's journal socket in the runtime dir.
+- **signature policy** — `podman import`/`push` refuse to run with no policy at
+  all, so `~/.config/containers` (home-manager's `policy.json`) and the
+  `/etc/containers` drop-ins are bound in.
+- **registry credentials** — `~/.docker/config.json` is bound read-only at the
+  path podman/skopeo look at, and the inherited `DOCKER_CONFIG` is unset (same
+  trick as `KUBECONFIG`), so an agent can push to registries you are already
+  logged in to. `~/.config/containers` is read-write, so `podman login --store`
+  persists there like gh's `hosts.yml`.
+
+Two constraints to know when writing image manifests from in here:
+
+- **Imported tarballs must be uid 0/gid 0** (`tar --owner=0 --group=0
+  --numeric-owner`). Exactly one uid is mapped in the sandbox, so any other owner
+  cannot be created on extraction — podman reports it as `potentially
+  insufficient UIDs or GIDs available in user namespace … lchown: invalid
+  argument`.
+- **No credential helpers.** `~/.docker/config.json`'s `auths` entries work;
+  `credsStore`/`credHelpers` (docker-credential-*) cannot, because the helper
+  binary is not in the sandbox.
+
+Why `pull`/`run`/`build`/`load` are out of reach: extracting a registry image's
+layers means `chown`ing files to the many uids/gids the image records, and that
+needs a *subordinate* uid range. bwrap maps one uid and hands the process no
+capabilities, and the setuid `newuidmap`/`newgidmap` helpers cannot close the
+gap — inside a user namespace a setuid binary whose owner is unmapped has its
+setuid bit ignored, so they fail with `write to uid_map failed: Operation not
+permitted`. Nothing config-level fixes that; the only ways in are to run the
+sandbox as root (defeats it) or to bind a host podman socket and use
+`podman --url unix://…`, which hands the agent an engine that can mount and write
+arbitrary host paths — explicitly *not* done here. If you need pull/build, do it
+on the host and use the sandbox for the push, or work from a
+`docker-archive`/`oci` tarball with `skopeo copy` (that needs no sandbox support
+at all).
+
 ## Verified properties (`./verify-sandbox.sh`)
 
 - Cannot read: `~/.ssh`, `/etc/shadow`, `/root`, other home dirs, host
@@ -123,6 +200,14 @@ project+/tmp-only writes.
 - `~/.kube/config` is visible and read-only when the host has a kubeconfig
   (checks skipped otherwise) — so `kubectl` can read the cluster config but
   not modify or delete it.
+- Container images (skipped when the host has no podman): `/sys/fs/cgroup` and a
+  private writable `$XDG_RUNTIME_DIR` are present, the host's runtime dir is not
+  visible, the image store is a private `vfs` under `/tmp`, podman's cgroup
+  manager is disabled, exactly one uid is mapped (the documented reason pull/run
+  build cannot work), `import → tag → save` round-trips in one session, `push`
+  writes an image out (to an OCI layout, so no registry is needed), and
+  `~/.docker/config.json` is visible read-only while `~/.config/containers` is
+  writable when the host has them.
 - Can read+write: `/app` (and changes propagate to the host) and `/tmp`.
 - `nix-shell -p cowsay` runs end-to-end (via the host nix daemon; skipped when
   the host has no daemon socket).
@@ -240,6 +325,76 @@ project+/tmp-only writes.
     `~/.cargo`; `-try` keeps the sandbox working on hosts without Go).
     `~/.go/bin` (`go install` output) joined `PATH` next to `~/.cargo/bin`.
 
+17. **podman inside the sandbox died with a bare `Error: no such file or
+    directory`** — no syscall detail, no path, `strace` useless because podman
+    vforks+execs its own child to do this work. The cause was `statfs()
+    /sys/fs/cgroup` returning `ENOENT`: podman inspects the cgroup hierarchy at
+    startup and treats a missing path as fatal. Fix: `--ro-bind /sys/fs/cgroup`
+    (read-only is enough — see item 20). Found by binding candidate paths back
+    one at a time until the error moved.
+18. **podman: `$XDG_RUNTIME_DIR` is missing / "make client" failure** — podman
+    requires a writable runtime dir owned by its own uid and keeps locks, the
+    event log and `auth.json` in it. The host's `/run/user/<uid>` is invisible in
+    the sandbox and must stay that way (ssh-agent socket, session-private dirs),
+    so the fix is a `--tmpfs` at the inherited path. Same treatment fixes
+    skopeo's `unable to parse user store file … /run/user/1001: no such file or
+    directory` warning, which it emits even for `docker://` transports.
+19. **containers/storage: podman commands failing with no message at all** — it
+    stages work in `/var/tmp`, which the sandbox does not have. Fix:
+    `--setenv TMPDIR /tmp`. Note this applies to the whole session, which is the
+    intent: a `TMPDIR` inherited from the host usually names a path the sandbox
+    cannot see.
+20. **podman wanted to write cgroups / talk to systemd** — `cgroup_manager =
+    "systemd"` (the NixOS default) needs a D-Bus session bus and
+    `/run/systemd/system`; `cgroupfs` needs to *write* `/sys/fs/cgroup`. Fix:
+    `cgroup_manager = "disabled"` in `containers/containers.conf`, which is safe
+    because no container is ever started here; `events_logger = "file"` drops the
+    journald dependency in the same way (no host journal socket in the private
+    runtime dir).
+21. **`podman import`: "error parsing the server image policy: no
+    policy.json file was found"** — import and push both consult a signature
+    policy and refuse to run without one. Fix: bind `~/.config/containers`
+    (home-manager's `policy.json`, a symlink into the already-bound store) and
+    `--ro-bind-try` the `/etc/containers` policy/registry drop-ins for hosts
+    without a user config.
+22. **`potentially insufficient UIDs or GIDs available in user namespace
+    (requested 0:42 for /etc/shadow) … lchown: invalid argument`** — the hard
+    limit. Layer extraction has to create files owned by arbitrary uids/gids.
+    The sandbox maps exactly one uid, and the usual rootless fix — setuid
+    `newuidmap` — is inert inside a user namespace because its owner (`root`) is
+    unmapped there, so the setuid bit is ignored:
+    `newuidmap: write to uid_map failed: Operation not permitted`. Three
+    consequences documented in "Container images": pull/run/build are out; the
+    store must be a fresh `vfs` in `/tmp` (the host's rootless store is owned by
+    subuids and reads back as `invalid argument`); imported tarballs must be
+    normalised to uid 0/gid 0 (`tar --owner=0 --group=0 --numeric-owner`), the
+    one ownership the single mapping can express.
+23. **A sandboxed image push appeared to hang for 20+ minutes** — two causes, both
+    worth remembering. (a) The run was piped through `head`: podman inherited the
+    pipe and the caller's stdin, so bwrap exited but the pipe stayed open and the
+    *tool call* never finished — drive long sandboxed commands with `< /dev/null`
+    and redirect their output to files. (b) The target registry address was dead,
+    and on WSL2 a `connect()` to an unbound port is **blackholed, not refused**
+    (host-side `curl http://127.0.0.1:1/v2/` times out the same way), so a typo'd
+    registry, a registry that is down, or a firewalled host all present as a
+    silent hang rather than `connection refused`. Probe an address with
+    `curl -m 5 http://<registry>/v2/` first, and give pushes a `timeout`.
+
+24. **A sandbox can outlive its command (leaked mounts and `/tmp`)** — bwrap
+    installs the namespace's init/reaper itself, and that reaper does not exit
+    while any process is still running inside. So anything that outlives the
+    command keeps the sandbox alive with its private `/tmp` (RAM) and mounts:
+    a daemonised helper, or — the case that turned up with container work — a
+    `podman push` interrupted while its connect to an unreachable registry was
+    still pending (podman parks, see item 23). `bwrap` then shows as the parent of
+    a `podman` that never finishes; `pkill -x podman` releases it. The one-flag
+    fix is `--as-pid-1` (the command becomes PID 1, so the kernel tears the
+    namespace down when it exits) and it was measured to work, but it was
+    **rejected**: a namespace init ignores signals it has no handler for, so
+    Ctrl-C stops reaching plain commands (`tail -f` inside the sandbox survived
+    SIGINT and only died on SIGTERM). Trading interactive signals for a leak that
+    a `pkill` fixes is the wrong direction.
+
 ## Trade-offs and limitations (read these)
 
 - **Network is shared** (`--share-net`). The agent needs it for LLM APIs,
@@ -257,6 +412,30 @@ project+/tmp-only writes.
   read-write because gh rewrites `hosts.yml` on token refresh. Same accepted
   trade-off as `~/.pi` above; unlike `~/.pi` that config is not in git, so a
   stray edit means re-running `gh auth login` on the host.
+- **Registry credentials are exposed read-only** — `~/.docker/config.json` is
+  bound so podman/skopeo can push with the logins you already have (an agent can
+  read the tokens in it; `credsStore`/`credHelpers` do *not* work, since the
+  helper binary is not in the sandbox — only the file's own `auths` entries). The
+  companion `~/.config/containers` bind is read-write for `podman login --store`,
+  so it carries the same weight as the gh case above. Drop both binds from
+  `sandbox.sh` if the agent should never push images.
+- **Image work is import/tag/push only** — `pull`, `run`, `build` and `load` need
+  a subordinate uid range, which a bwrap user namespace cannot obtain (issue 22).
+  Building images is therefore a host-side job; the sandbox is useful at the
+  packaging/push end, and for archive→registry copies via `skopeo`.
+- **The container store is per-session and lives in RAM** — `graphroot` is
+  `/tmp/containers/storage` on the sandbox's tmpfs, so imported images cost
+  memory, share the `/tmp` size limit, and disappear when the sandbox exits.
+  Push in the same session you import (see "Container images").
+- **Registry pushes fail as hangs on WSL2** — connecting to an unbound or
+  firewalled port times out instead of being refused (host-side behaviour, not a
+  sandbox quirk), so a wrong registry address looks like a stalled push. Probe
+  with `curl -m 5 http://<registry>/v2/` and wrap pushes in `timeout`.
+- **`$XDG_RUNTIME_DIR` and `TMPDIR` are now sandbox-owned** — the runtime dir is a
+  fresh tmpfs and `TMPDIR` is forced to `/tmp` for the whole session, not just for
+  podman. That is what the container stack needs and what any other tool should
+  want too, but it does mean nothing in the session can reach a host runtime dir
+  or host temp dir by path.
 - **Read exposure** — the whole nix store and system profile are readable.
   That's the docker base-image equivalent and is what makes the setup robust;
   binding individual store paths instead would be stricter but fragile.
@@ -356,6 +535,11 @@ Caveats:
 
 ## Known issues (deferred)
 
+- **Sandboxes can leak if a command leaves a process behind** — see issues log
+  item 24. Diagnose with `pgrep -a -x podman` (or any long-lived process whose
+  parent is a `bwrap`) and clean up with `pkill -x podman`. Left unresolved on
+  purpose: the clean fix changes PID 1 signal semantics for every session.
+
 - **LSP tools are unverified.** `vtsls` is "not installed" on the host and in
   the sandbox alike (`lsp.json` has `installMode: off`, and the bundled server
   needs an explicit interactive `/lsp install vtsls`) — not a sandbox
@@ -383,6 +567,19 @@ Caveats:
 - Different kubeconfig: `KUBE_CONFIG=…` env var (defaults to the host's
   `KUBECONFIG` if set, else `~/.kube/config`; bound read-only at kubectl's
   default lookup path inside the sandbox, single file only).
+- Container credentials/config: `DOCKER_CONFIG_HOST=…` (host-side file bound as
+  the sandbox's `~/.docker/config.json`, default `~/.docker/config.json`; absent
+  file is skipped). `SANDBOX_CONTAINER_CONFIG_DIR=…` overrides the storage/engine
+  config dir the package installs (from a checkout, `sandbox.sh` finds the
+  sibling `containers/` itself; if that dir is missing the whole container block —
+  cgroup bind, runtime tmpfs, env — is skipped and podman will not start).
+  To keep imported images between sessions, point `CONTAINERS_STORAGE_CONF` at a
+  copy of `containers/storage.conf` whose `graphroot` is a host directory you also
+  bind (e.g. via `EXTRA_BINDS`) — never at the host's own rootless store.
+- Container tools without sandbox support: `skopeo copy docker-archive:… \
+  docker://registry/…` needs no extra binds at all (it never extracts layers), so
+  it works even with the container block disabled; `crane push` is the equivalent
+  for a plain rootfs tarball.
 - Different Windows setup (WSL): `WIN_USER=…` (otherwise read off
   `WIN_USERS_DIR`, default `/mnt/c/Users`, falling back to `cmd.exe`),
   `WIN_USERS_DIR=…`, `WSL_CMD_EXE=…`, `EDGE_EXE=…` env vars. `WIN_USER`,
@@ -403,5 +600,10 @@ Caveats:
 
 - `sandbox.sh` — the sandbox wrapper (one bwrap invocation, commented).
 - `verify-sandbox.sh` — boundary verification suite; the nix-shell check is
-  skipped when the host has no nix daemon socket, and the cargo, go and gh
-  checks are skipped when the host lacks those toolchains.
+  skipped when the host has no nix daemon socket, the cargo, go and gh checks are
+  skipped when the host lacks those toolchains, and the container-image checks are
+  skipped when the host has no podman.
+- `containers/storage.conf` — containers/storage config: `vfs` (no mount
+  capability in the namespace) with graphroot/runroot in the sandbox's `/tmp`.
+- `containers/containers.conf` — podman engine config: cgroup manager disabled,
+  file event logger (no systemd, D-Bus, cgroup writes or host journal).

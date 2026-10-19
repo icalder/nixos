@@ -111,6 +111,84 @@ else
   echo "SKIP  kubectl config checks (no kubeconfig on host)"
 fi
 
+echo "== Container images (podman import/tag/push) =="
+# Skipped when the host has no podman: the binary comes from the user's profile,
+# the rest (storage/engine config) from the sandbox itself.
+# pull/run/build are deliberately *not* tested for success — they cannot work
+# without a subordinate uid range; the mapped-uid check below documents why.
+HOST_RUNTIME="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+if command -v podman >/dev/null 2>&1; then
+  check "/sys/fs/cgroup visible (podman statfs at startup)" 0 \
+    "$(in_sandbox 'stat -f -c %T /sys/fs/cgroup | grep -q cgroup2')"
+  check "XDG_RUNTIME_DIR private and writable (podman needs it)" 0 \
+    "$(in_sandbox 'touch "$XDG_RUNTIME_DIR/.v-selftest" && rm "$XDG_RUNTIME_DIR/.v-selftest"')"
+  # podman wants a runtime dir, and the host's holds agent sockets (ssh-agent),
+  # so the sandbox must get a fresh one rather than a bind of the host's.
+  echo marker > "$HOST_RUNTIME/.v-sandbox-probe"
+  check "host runtime dir not visible in sandbox" 1 \
+    "$(in_sandbox "cat $HOST_RUNTIME/.v-sandbox-probe")"
+  rm -f "$HOST_RUNTIME/.v-sandbox-probe"
+  # 'vfs' + a graphroot under /tmp is the private per-session store; the host's
+  # rootless store (~/.local/share/containers) is unreadable in here and must not
+  # be used.
+  check "container store is private vfs in /tmp" 0 \
+    "$(in_sandbox "test \"\$(podman info --format '{{.Store.GraphDriverName}} {{.Store.GraphRoot}}')\" = 'vfs /tmp/containers/storage'")"
+  check "podman cgroup manager disabled (no systemd/cgroupfs writes)" 0 \
+    "$(in_sandbox "test \"\$(podman info --format '{{.Host.CgroupManager}}')\" = disabled")"
+  # One mapped uid is the reason registry images cannot be extracted (their
+  # layers belong to many uids/gids), asserted so a future kernel or namespace
+  # change that lifts the limitation shows up as a failure here.
+  check "exactly one uid mapped (why pull/run/build cannot work)" 0 \
+    "$(in_sandbox 'test "$(wc -l < /proc/self/uid_map)" -eq 1')"
+
+  # Import needs a tarball whose entries are all uid 0/gid 0: that is the only
+  # ownership the single mapping can express. Import/tag/save/push then all run
+  # in one sandbox session, because the image store lives in the session's /tmp.
+  mkdir -p .v-rootfs/etc .v-rootfs/data
+  echo selftest > .v-rootfs/etc/app.conf
+  echo selftest > .v-rootfs/data/payload
+  tar -C .v-rootfs --owner=0 --group=0 --numeric-owner -czf .v-rootfs.tgz .
+  check "import -> tag -> save round-trips in one session" 0 "$(in_sandbox '
+    podman import /app/.v-rootfs.tgz sbx-verify-src >/dev/null &&
+    podman tag sbx-verify-src 127.0.0.1:1/sbx-verify:selftest &&
+    podman save --output /tmp/.v-image.tar sbx-verify-src &&
+    test -s /tmp/.v-image.tar')"
+  # Push is verified by writing the image out to an OCI layout, which runs the
+  # same copy/manifest machinery as a registry push with no network. A "push to a
+  # dead registry and expect a refusal" test is deliberately not used: on WSL2 a
+  # connect to an unbound port is blackholed rather than refused (host-side curl
+  # to 127.0.0.1:1 times out too), so it hangs instead of failing fast. Probe a
+  # new registry address with `curl -m 5 http://<registry>/v2/` before pushing.
+  check "push writes an image out (oci destination)" 0 "$(in_sandbox '
+    podman import /app/.v-rootfs.tgz sbx-verify-src >/dev/null &&
+    podman tag sbx-verify-src registry.invalid:5000/team/sbx-verify:selftest &&
+    podman image exists registry.invalid:5000/team/sbx-verify:selftest &&
+    podman push sbx-verify-src oci:/tmp/.v-image.oci &&
+    test -s /tmp/.v-image.oci/index.json')"
+  rm -rf .v-rootfs .v-rootfs.tgz
+
+  # Registry credentials and registry config come from the host, read-only and
+  # read-write respectively; skipped when the host has neither.
+  if [ -f "$HOST_HOME/.docker/config.json" ]; then
+    check "/home/sandbox/.docker/config.json visible (registry creds)" 0 \
+      "$(in_sandbox 'test -f /home/sandbox/.docker/config.json')"
+    check "/home/sandbox/.docker/config.json read-only" 1 \
+      "$(in_sandbox 'rm -f /home/sandbox/.docker/config.json 2>/dev/null')"
+  else
+    echo "SKIP  registry credential checks (no ~/.docker/config.json on host)"
+  fi
+  if [ -d "$HOST_HOME/.config/containers" ]; then
+    check "/home/sandbox/.config/containers visible (registries, policy)" 0 \
+      "$(in_sandbox 'test -d /home/sandbox/.config/containers')"
+    check "/home/sandbox/.config/containers writable (podman login --store)" 0 \
+      "$(in_sandbox 'touch /home/sandbox/.config/containers/.v-selftest && rm /home/sandbox/.config/containers/.v-selftest')"
+  else
+    echo "SKIP  container config checks (no ~/.config/containers on host)"
+  fi
+else
+  echo "SKIP  container image checks (no podman on host)"
+fi
+
 echo "== Project dir: real bind mount to host =="
 echo "host-side-content" > .v-bindfile
 check "sandbox reads host file"               0 "$(in_sandbox 'grep -q host-side-content /app/.v-bindfile')"
