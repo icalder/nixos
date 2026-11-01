@@ -263,6 +263,12 @@
           ./hosts/opti/configuration.nix
           ./hosts/opti/changeip-update.nix
           ./modules/autoupgrade.nix
+          # Both inert while `networking.wireless.enable` is off, which it is on
+          # this box. They are carried so that if a radio is ever added, the
+          # regulatory hint and the link watchdog are already there rather than
+          # being the thing nobody remembered to add after the next outage.
+          ./modules/wifi-regulatory.nix
+          ./modules/wifi-link-watchdog.nix
           panaremote.nixosModules.default
         ];
       };

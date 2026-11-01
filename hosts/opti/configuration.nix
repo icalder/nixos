@@ -194,6 +194,13 @@
   # Or disable the firewall altogether.
   networking.firewall.enable = false;
 
+  # Carried on every host in this fleet, wired ones included: a user-set country
+  # is what cfg80211 restores when an association drops, and 2026-11-01 on
+  # nixos-3a showed the lockout that happens without one (NIXOS-3A-ISSUES.md §4).
+  # Nothing reads it here while `networking.wireless.enable` is off, and
+  # wifiLinkWatchdog follows that option, so neither installs anything yet.
+  wifiRegulatory.country = "GB";
+
   # This option defines the first version of NixOS you have installed on this particular machine,
   # and is used to maintain compatibility with application data (e.g. databases) created on older NixOS versions.
   #

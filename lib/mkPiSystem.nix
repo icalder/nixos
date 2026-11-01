@@ -34,11 +34,23 @@ let
         boot.supportedFilesystems = {
           zfs = pkgs.lib.mkForce false;
         };
+
+        # Sunday 2026-11-01 showed what it costs when the regulatory domain comes
+        # only from the access point: the association dropped, cfg80211 fell back
+        # to the world domain, and brcmfmac could not set a channel again until
+        # the box was power cycled (NIXOS-3A-ISSUES.md §4). A user-set hint is
+        # what cfg80211 restores instead. mkDefault so a Pi that moves can state
+        # its own code with a plain assignment.
+        wifiRegulatory.country = pkgs.lib.mkDefault "GB";
       }
       agenix.nixosModules.default
       ../modules/autoupgrade.nix
       ../modules/low-ram-rebuild.nix
       ../modules/sd-card-tuning.nix
+      # Both inert unless the host runs wpa_supplicant, which rpi4-1 does not, so
+      # these are safe to carry for every Pi rather than repeating them per host.
+      ../modules/wifi-regulatory.nix
+      ../modules/wifi-link-watchdog.nix
       # modules/adsb-feeder.nix is deliberately NOT imported here. It mentions
       # services.fr24feed, an option that exists only where flake.nix also adds
       # fr24feed.nixosModules.fr24feed, i.e. alarmpi and nixos-3a. Importing it
