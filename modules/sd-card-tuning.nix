@@ -17,7 +17,7 @@
   ...
 }:
 let
-  inherit (lib) mkOption types;
+  inherit (lib) mkDefault mkOption types;
   MiB = m: m * 1024 * 1024;
 
   # Swapping is only cheap when something fast is behind it. With zram the swap
@@ -45,6 +45,34 @@ in
         (15% of the filesystem), which on a 30 GB card is over 4 GB.
       '';
     };
+
+    sdCardTuning.minFreeKiB = mkOption {
+      type = types.int;
+      default = 65536;
+      example = 16384;
+      description = ''
+        Value for vm.min_free_kbytes: the kernel's permanent reserve for atomic
+        allocations. Allocations that may not wait for reclaim (network
+        SK_BUFFERS, block completion) come out of this pool, so raising it makes
+        an atomic path stall instead of fail.
+
+        The default is sized for a 1 GiB board and must not be carried onto a
+        smaller one unchanged, because it is memory taken away from every other
+        allocation. On alarmpi (865 MiB) it is 7.4% of RAM, which is the ratio
+        it was chosen for. On the Pi 3 Model A Plus (375 MiB) the same number is
+        17%, and the measured effect there was a zone whose min/low/high
+        watermarks sat at 64/80/96 MiB while MemAvailable was 94 MiB.
+
+        The option also sets the gap down to the low and high watermarks -- min
+        plus a quarter of itself, or 1% of managed pages when
+        watermark_scale_factor asks for more -- so all three move together. With
+        watermark_scale_factor left at 100 the kswapd wake margin stays about 1%
+        of RAM at either value. Check on a live host after changing it:
+
+            awk '/zone DMA/,0' /proc/zoneinfo | grep -m4 -E 'min|low|high'
+            grep MemAvailable /proc/meminfo
+      '';
+    };
   };
 
   config = {
@@ -64,8 +92,9 @@ in
 
       # Keep a larger atomic reserve. DMA and network allocations cannot
       # sleep-for-reclaim, and a 22 MiB default is easily exhausted by a card
-      # that is mid-erase.
-      "vm.min_free_kbytes" = 65536;
+      # that is mid-erase. The figure is a percentage of RAM in disguise, so it
+      # is an option and is set per host.
+      "vm.min_free_kbytes" = config.sdCardTuning.minFreeKiB;
 
       # Prefer swapping to discarding the page cache, but only when swap is
       # RAM-backed. Compressed in-RAM swap costs far less than re-reading
@@ -73,7 +102,13 @@ in
       # values above 100 are valid and mean "swap is cheaper than page cache".
       # Without zram this does the opposite of what it is for, so it falls back
       # to the kernel default of 60.
-      "vm.swappiness" = swappiness;
+      #
+      # mkDefault rather than a bare value: the branch below knows only whether
+      # zram exists, not what else is behind it. A host with zram in front of a
+      # card swapfile -- nixos-3a -- has both devices competing for the same
+      # knob and states its own value, so the module offers a default instead of
+      # taking the decision at the highest priority.
+      "vm.swappiness" = mkDefault swappiness;
 
       # Dentries and inodes are cheap to regenerate; let go of them sooner.
       "vm.vfs_cache_pressure" = 200;
@@ -82,8 +117,9 @@ in
       # instead of the default 1 MiB. Against zram, readahead is a wasted bet
       # because zram access is cheap and near-random. Against a swapfile on the
       # card the opposite holds -- small reads are worse than bulk reads -- so
-      # the default of 3 (1 MiB) is kept there.
-      "vm.page-cluster" = pageCluster;
+      # the default of 3 (1 MiB) is kept there. mkDefault for the same reason as
+      # vm.swappiness.
+      "vm.page-cluster" = mkDefault pageCluster;
     };
 
     # fstrim on an SD card is close to useless -- the card's own wear levelling

@@ -18,12 +18,59 @@
     ../../modules/adsb-feeder.nix
   ];
 
+  # This card swapfile alone is not enough. The last run that completed
+  # (Sun 2026-10-25) reported 176.4 MiB memory peak and 774.7 MiB swap peak --
+  # about three quarters of the whole swapfile -- on a machine with 375 MiB of
+  # RAM, and that same run wrote 4.3 GB to the card it was swapping onto.
   swapDevices = [
     {
       device = "/swapfile";
       size = 1024; # Size in MB (1GB)
     }
   ];
+
+  # Give reclaim something faster than the card to put anonymous memory in.
+  # zramSwap's priority is above the -2 this swapfile gets, so the hot part of
+  # the spill lands in RAM while the card keeps its role as the slow backstop:
+  # 774.7 MiB of peak spill does not fit in a 120 MiB device, so the swapfile
+  # has to stay.
+  #
+  # Deliberately not alarmpi's numbers. modules/sd-card-tuning.nix picks
+  # swappiness=180 and page-cluster=0 for any host with zram enabled, and both
+  # assume zram is the only swap device: 180 means "swap is cheaper than page
+  # cache", and page-cluster=0 reads 4 KiB per fault because zram access is
+  # cheap and near-random. Neither holds while a card swapfile still carries
+  # most of the spill -- there small reads are worse than bulk reads. So: small
+  # device (ALARMPI-ISSUES.md §8.8 asks for 30-40% here, not alarmpi's 75%),
+  # page-cluster kept at the card-friendly default, swappiness raised but not as
+  # far. 100 is a starting point, not a measured optimum: alarmpi's runs still
+  # spill past its own device (744.8M swap peak against a 648M device, §8.2), so
+  # the card is in the swap path on both boxes and only 3a's numbers can say
+  # whether 100 was the right opening bid. Re-measure after the next run:
+  #
+  #     zramctl; swapon --show; cat /proc/pressure/memory
+  #     grep -E 'MemFree|MemAvailable|SwapCached' /proc/meminfo
+  #     journalctl -u nixos-upgrade.service | grep Consumed
+  #     awk '/zone DMA/,0' /proc/zoneinfo | grep -m4 -E 'min|low|high'
+  zramSwap = {
+    enable = true;
+    memoryPercent = 32; # ~120 MiB of device on 375 MiB of RAM
+  };
+
+  boot.kernel.sysctl = {
+    "vm.swappiness" = 100;
+    "vm.page-cluster" = 3;
+  };
+
+  # 65536 is the sd-card-tuning default, sized for a 1 GiB board. On 375 MiB it
+  # is 17% of RAM held permanently below the low watermark: measured live, the
+  # zone watermarks were min 64 / low 80 / high 96 MiB against 94 MiB of
+  # MemAvailable. 16384 is 4.3% of RAM, which keeps the module's intent (more
+  # reserve than the kernel would pick: alarmpi's default was 22528 at 865 MiB,
+  # ALARMPI-ISSUES.md §8.2) at a scale this board can pay for. Not a measured
+  # optimum -- the watermark check after the next deploy says whether.
+  # NIXOS-3A-ISSUES.md §6.1 has the numbers.
+  sdCardTuning.minFreeKiB = 16384;
 
   age.secrets = {
     itcalde.file = ../../secrets/itcalde.age;
