@@ -92,6 +92,29 @@ in
           bytes. Must exceed pauseBelow or builds thrash at the boundary.
         '';
       };
+
+      maxRunTime = mkOption {
+        type = types.nonEmptyStr;
+        default = "8h";
+        example = "6h";
+        description = ''
+          Wall-clock ceiling for one nixos-upgrade run, set as
+          `TimeoutStartSec`. Exceeding it kills the run and fails the unit with
+          result `timeout` -- the loud failure this module exists to produce --
+          so the ceiling has to sit above the work a legitimate run needs,
+          otherwise it fails healthy machines instead of saving sick ones.
+
+          Sized from the alarmpi journal. Runs with nothing to compile finish in
+          27-31 minutes. In a week where the Rust packages rebuild, `ubc125`
+          alone was still building 1h45m after it started, with the host healthy
+          and other units still logging, and the previous 3h ceiling killed that
+          run at 05:22 with the derivation unfinished. Nix discards an
+          interrupted build, so a ceiling below the real duration means every
+          following week restarts that compile from zero and fails again.
+          8h covers both Rust packages and the system closure at
+          `max-jobs = 1` / `cores = 1`.
+        '';
+      };
     };
   };
 
@@ -146,14 +169,15 @@ in
       serviceConfig = {
         # The client and its activation script. Activation restarts every unit,
         # which is when a host already short of memory tends to stall, so give
-        # it a bounded window rather than an indefinite one.
+        # it a bounded window rather than an indefinite one -- bounded by
+        # lowRamRebuild.maxRunTime, which is sized from observed run durations.
         Nice = 19;
         IOSchedulingClass = "idle";
         IOSchedulingPriority = 7;
         MemoryAccounting = true;
         TasksAccounting = true;
         TasksMax = 512;
-        TimeoutStartSec = "3h";
+        TimeoutStartSec = cfg.maxRunTime;
       };
     };
   };
