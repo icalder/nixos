@@ -67,11 +67,13 @@ models:
       --temp 1.0 --top-p 0.95 --top-k 20
   qwen-3-8-27b-mtp:
     cmd: C:/Users/iainc/llama-cpp/llama-server.exe
-      --model F:/llama-models/unsloth/Qwen3.8-27B-GGUF/Qwen3.8-27B-UD-Q5_K_XL.gguf
+      --model  F:/llama-models/unsloth/Qwen3.8-27B-GGUF/Qwen3.8-27B-UD-Q5_K_XL.gguf
       --mmproj F:/llama-models/unsloth/Qwen3.8-27B-GGUF/mmproj-F16.gguf
-      --port ${PORT} -np 1 --flash-attn on --ctx-size 131072 --threads 6 --no-ui
+      --port ${PORT} -np 1 --no-ui
+      --flash-attn on --ctx-size 131072 --n-gpu-layers all
+      --split-mode tensor --tensor-split 1.6,1 --fit off
+      --spec-type draft-mtp --spec-draft-n-max 3 --spec-draft-sampling probabilistic
       --temp 1.0 --top-p 0.95 --top-k 20 --presence-penalty 0.0
-      --spec-type draft-mtp --spec-draft-n-max 3
   qwen-3-8-flash-next:
     cmd: C:/Users/iainc/llama-cpp/llama-server.exe
       --model F:/llama-models/unsloth/Qwen3.8-Flash-Next-GGUF/UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00001-of-00003.gguf
