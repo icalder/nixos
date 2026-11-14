@@ -1,0 +1,85 @@
+# Canonical layout for model `cmd` commands — follow this when adding models.
+#
+# `cmd` is a plain string that llama-swap tokenizes on whitespace, so line
+# breaks are purely cosmetic. Wrap new commands as follows, top to bottom:
+#
+#   cmd: <path-to-llama-server.exe>
+#     --model <gguf-path>
+#     --mmproj <mmproj-path>            # if any
+#     --port ${PORT} [--device GPU] -np N --flash-attn on --ctx-size N [--threads N] --no-ui
+#     [--embeddings | --reranking] [--lazy-mode X] [--load-mode X] [-lzm on]  # mode/load, if any
+#     --temp X [--top-p X] [--top-k X] [--presence-penalty X] [--min-p X]     # tuning: own line, nothing else
+#     --spec-type T [--spec-draft-device X] [--spec-draft-n-max N]            # if any
+#     --spec-draft-model <gguf-path>
+#
+# Rules:
+# - a flag and its value always stay on the same line
+# - lines break at flag boundaries; keep lines <= 100 chars where possible
+#   (a single unbreakable model path may exceed this)
+# - omit lines whose flag group is absent; keep the order of the rest
+
+models:
+  bge-m3:
+    cmd: C:/Users/iainc/llama-cpp/llama-server.exe
+      --model F:/llama-models/ggml-org/bge-m3-Q8_0-GGUF/bge-m3-q8_0.gguf
+      --embeddings --ubatch-size 2048
+      --port ${PORT} --device CUDA0 -np 2 --flash-attn on --ctx-size 8192 --no-ui
+  bge-reranker-v2-m3:
+    cmd: C:/Users/iainc/llama-cpp/llama-server.exe
+      --model F:/llama-models/gpustack/bge-reranker-v2-m3-GGUF/bge-reranker-v2-m3-Q8_0.gguf
+      --reranking --ubatch-size 2048
+      --port ${PORT} --device CUDA0 -np 2 --flash-attn on --ctx-size 8192 --no-ui
+  gemma-4-12b:
+    cmd: C:/Users/iainc/llama-cpp/llama-server.exe
+      --model F:/llama-models/unsloth/gemma-4-12B-it-qat-GGUF/gemma-4-12B-it-qat-UD-Q4_K_XL.gguf
+      --mmproj F:/llama-models/unsloth/gemma-4-12B-it-qat-GGUF/mmproj-F16.gguf
+      --port ${PORT} --device CUDA1 -np 1 --flash-attn on --ctx-size 131072 --no-ui
+      --temp 1.0 --top-p 0.95 --top-k 64
+      --spec-type draft-mtp --spec-draft-device CUDA1 --spec-draft-n-max 2
+      --spec-draft-model F:/llama-models/unsloth/gemma-4-12B-it-qat-GGUF/mtp-gemma-4-12B-it.gguf
+  gemma-4-31b:
+    cmd: C:/Users/iainc/llama-cpp/llama-server.exe
+      --model F:/llama-models/unsloth/gemma-4-31B-it-qat-GGUF/gemma-4-31B-it-qat-UD-Q4_K_XL.gguf
+      --mmproj F:/llama-models/unsloth/gemma-4-31B-it-qat-GGUF/mmproj-F16.gguf
+      --port ${PORT} -np 1 --flash-attn on --ctx-size 131072 --threads 6 --no-ui
+      --temp 1.0 --top-p 0.95 --top-k 64
+      --spec-type draft-mtp --spec-draft-device CUDA1 --spec-draft-n-max 2
+      --spec-draft-model F:/llama-models/unsloth/gemma-4-31B-it-qat-GGUF/mtp-gemma-4-31B-it.gguf
+  laguna-s-21:
+    cmd: C:/Users/iainc/llama-cpp/llama-server.exe
+      --model F:/llama-models/unsloth/Laguna-S-2.1-GGUF/UD-IQ4_NL/Laguna-S-2.1-UD-IQ4_NL-00001-of-00003.gguf
+      --port ${PORT} -np 1 --flash-attn on --ctx-size 131072 --threads 6 --no-ui
+      --load-mode none -lzm on
+      --ubatch-size 1024
+  muse-glimmer-30b:
+    cmd: C:/Users/iainc/llama-cpp/llama-server.exe
+      --model F:/llama-models/meta-models/muse-glimmer-30B-GGUF/Muse-Glimmer-30B-KQuant-Dynamic-Q4_K_XL.gguf
+      --mmproj F:/llama-models/meta-models/muse-glimmer-30B-GGUF/mmproj-kquant.gguf
+      --port ${PORT} -np 1 --flash-attn on --ctx-size 131072 --threads 6 --no-ui
+      --temp 1.0 --top-p 0.95 --top-k 64
+      --spec-type draft-dflash --spec-draft-n-max 15
+      --spec-draft-model F:/llama-models/meta-models/muse-glimmer-30B-GGUF/dflash-kquant.gguf
+  ornith-1-5-35b-a3b:
+    cmd: C:/Users/iainc/llama-cpp/llama-server.exe
+      --model F:/llama-models/ornith-ai/Ornith-1.5-35B-A3B-GGUF/Ornith-1.5-35B-Q5_K_M.gguf
+      --mmproj F:/llama-models/ornith-ai/Ornith-1.5-35B-A3B-GGUF/mmproj-Ornith-1.5-35B-BF16.gguf
+      --port ${PORT} -np 1 --flash-attn on --ctx-size 131072 --no-ui
+      --temp 1.0 --top-p 0.95 --top-k 20
+  qwen-3-8-27b-mtp:
+    cmd: C:/Users/iainc/llama-cpp/llama-server.exe
+      --model F:/llama-models/unsloth/Qwen3.8-27B-GGUF/Qwen3.8-27B-UD-Q5_K_XL.gguf
+      --mmproj F:/llama-models/unsloth/Qwen3.8-27B-GGUF/mmproj-F16.gguf
+      --port ${PORT} -np 1 --flash-attn on --ctx-size 131072 --threads 6 --no-ui
+      --temp 1.0 --top-p 0.95 --top-k 20 --presence-penalty 0.0
+      --spec-type draft-mtp --spec-draft-n-max 3
+  qwen-3-8-flash-next:
+    cmd: C:/Users/iainc/llama-cpp/llama-server.exe
+      --model F:/llama-models/unsloth/Qwen3.8-Flash-Next-GGUF/UD-IQ4_XS/Qwen3.8-Flash-Next-UD-IQ4_XS-00001-of-00003.gguf
+      --mmproj F:/llama-models/unsloth/Qwen3.8-Flash-Next-GGUF/mmproj-F16.gguf
+      --port ${PORT} -np 1 --flash-attn on --ctx-size 131072 --threads 6 --no-ui
+      --lazy-mode auto --load-mode none -lzm on
+      --ubatch-size 1024
+      --temp 1.0 --top-p 0.95 --top-k 20 --min-p 0.0
+      --spec-draft-model F:/llama-models/ggml-org/Qwen3.8-Flash-Next-GGUF/mtp-Qwen3.8-Flash-Next-Q4_0.gguf
+      --spec-type draft-mtp --spec-draft-n-max 3
+
