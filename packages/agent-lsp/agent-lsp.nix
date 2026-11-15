@@ -1,6 +1,7 @@
-{ lib
-, buildGoModule
-, fetchFromGitHub
+{
+  lib,
+  buildGoModule,
+  fetchFromGitHub,
 }:
 
 # Nix equivalent of `go install github.com/blackwell-systems/agent-lsp/cmd/agent-lsp@latest`.
@@ -41,7 +42,13 @@ buildGoModule rec {
     '';
     homepage = "https://github.com/blackwell-systems/agent-lsp";
     license = licenses.mit;
-    platforms = [ "x86_64-linux" "aarch64-linux" ];
+    platforms = [
+      "x86_64-linux"
+      "aarch64-linux"
+    ];
     mainProgram = "agent-lsp";
   };
 }
+
+# Note: langauage server tools:
+# npm update -g typescript-language-server
