@@ -77,6 +77,7 @@ machines the Windows-side binds are skipped automatically.
 | `~/.nix-profile` | host | read-only | node, npm, user-installed nix tools |
 | `~/.cargo` | host | **read-write** | cargo toolchain — registry cache, `cargo install` output (MCP server binaries) |
 | `~/.go` | host | **read-write** | Go toolchain — module cache (`pkg/mod`), `go install` output (`-try` bind: hosts without Go still work) |
+| `/home/sandbox/.agent-lsp` | host | **read-write** | agent-lsp (MCP) audit trail (`audit.jsonl`, written at startup and per edit — the server exits if it can't) + per-workspace symbol-ref cache |
 | `/home/sandbox/.cache/go-build` | host | **read-write** | Go build cache (default `GOCACHE`) — shared with the host, so sandboxed builds aren't cold every session |
 | `~/.local` | host | read-only | codebase-memory-mcp binary |
 | `/home/sandbox/.kube/config` | host `~/.kube/config` | read-only | kubectl cluster credentials — the binary comes from `~/.nix-profile`/system sw (already on PATH); rest of `~/.kube` invisible |

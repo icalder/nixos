@@ -7,7 +7,8 @@
 #
 # Writable: /app (the project dir), /tmp (private tmpfs, also the container
 #           image store), ~/.pi, ~/.cargo, ~/.go (module cache, go install,
-#           build cache), ~/.config/gh, ~/.config/containers (registry config),
+#           build cache), ~/.agent-lsp (MCP audit trail + symbol-ref cache),
+#           ~/.config/gh, ~/.config/containers (registry config),
 #           /nix/var/nix (private tmpfs, nix client state in local mode)
 # Read-only: nix store, system binaries, pi/npm/cargo installs, nix.conf,
 #           kubeconfig (kubectl cluster access), /sys/fs/cgroup, ~/.docker
@@ -158,6 +159,12 @@ fi
 
 BWRAP="${BWRAP:-$(resolve_bwrap)}"
 
+# agent-lsp (MCP server) creates $HOME/.agent-lsp at startup for its audit
+# trail and exits when that fails, so the host dir must exist for the bind
+# below (bwrap cannot bind a missing path, and -try would just re-break the
+# server). It stays empty until agent-lsp first runs.
+mkdir -p "$HOME/.agent-lsp"
+
 # Base sandbox, kept as an array rather than a backslash-continued command
 # line: comments are then safe inside it, and the Windows block below can be
 # appended conditionally.
@@ -204,6 +211,12 @@ bwrap_args=(
   # / GOMODCACHE at /tmp. -try keeps the sandbox working on hosts without a
   # Go setup; same accident-not-malice model as ~/.cargo.
   --bind-try "$HOME/go" "$SANDBOX_HOME/go"
+  # agent-lsp (MCP): audit trail (audit.jsonl — one record per agent edit,
+  # created at startup; the server exits if it cannot write it) and the
+  # per-workspace symbol-ref cache. Read-write and persistent, like ~/.pi:
+  # the trail is meant to be inspected after the session, and the cache
+  # would go cold every session on a tmpfs.
+  --bind "$HOME/.agent-lsp" "$SANDBOX_HOME/.agent-lsp"
   --ro-bind "$HOME/.local" "$SANDBOX_HOME/.local"
   --ro-bind "$HOME/.nix-profile" "$SANDBOX_HOME/.nix-profile"
   --ro-bind "$HOME/.gitconfig" "$SANDBOX_HOME/.gitconfig"

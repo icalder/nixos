@@ -90,6 +90,12 @@ else
   echo "SKIP  go checks (no ~/.go on host)"
 fi
 
+# agent-lsp (MCP) creates ~/.agent-lsp at startup for its audit trail and
+# exits when that fails; sandbox.sh pre-creates the host dir, so this always
+# applies (no skip).
+echo "== agent-lsp home (~/.agent-lsp) =="
+check "/home/sandbox/.agent-lsp writable (audit trail + cache)" 0 "$(in_sandbox 'touch /home/sandbox/.agent-lsp/.v-selftest && rm /home/sandbox/.agent-lsp/.v-selftest')"
+
 # gh binds ~/.config/gh read-write (token refresh); skipped on hosts without one.
 echo "== gh CLI config (~/.config/gh) =="
 if [ -d "$HOST_HOME/.config/gh" ]; then
