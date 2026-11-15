@@ -55,6 +55,8 @@ in
 
       # LSP server
       nil
+      # MCP server that orchestrates language servers for AI agents
+      agent-lsp
       nixfmt
       # Include nodejs by default as it's required by many agents and tools
       nodejs

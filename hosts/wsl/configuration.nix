@@ -13,56 +13,6 @@
   ...
 }:
 
-let
-  llama-cpp-cuda =
-    (unstable-pkgs.llama-cpp.override {
-      blasSupport = true;
-      cudaSupport = true;
-      rocmSupport = false;
-      vulkanSupport = false;
-      metalSupport = false;
-      # nodejs 26.9.0 (nodejs_latest) fails its sandboxed test suite;
-      # its Hydra build is broken too, so nothing is in the cache.
-      # Pin to nodejs 24 LTS. Remove once https://github.com/NixOS/nixpkgs/issues/564449 is fixed.
-      nodejs_latest = unstable-pkgs.nodejs_24;
-    }).overrideAttrs
-      (oldAttrs: rec {
-        version = "11330";
-        src = unstable-pkgs.fetchFromGitHub {
-          inherit (oldAttrs.src) owner repo;
-          tag = "b${version}";
-          hash = "sha256-wvYSa4zxGUQn4KxAd+FOQcuJ9pkkj0AjDhJe0zedFMo=";
-        };
-        npmRoot = "tools/ui";
-        npmDepsHash = "sha256-a17M+L3nLdRnN6WMB6imPFmwqG2g8uv+gwN0XTAUrf8=";
-        # src = unstable-pkgs.fetchFromGitHub {
-        #   # inherit (oldAttrs.src) owner repo;
-        #   # lib.fakeHash
-        #   owner = "am17an";
-        #   repo = "llama.cpp";
-        #   rev = "mtp-clean";
-        #   hash = "sha256-io9HQBZ4FGRMGdXivIMYFtljz/tsCj/D4po054caF8Q=";
-        # };
-        # npmDepsHash = "sha256-pjdbI6NcZRlJVd62xhgbLhWrwFYwgsIwjORqvo1+VD8=";
-
-        # Enable native CPU optimizations (AVX, AVX2, etc.)
-        cmakeFlags = (oldAttrs.cmakeFlags or [ ]) ++ [
-          "-DGGML_NATIVE=ON"
-          "-DGGML_CUDA_PDL=ON"
-          "-DCMAKE_CUDA_ARCHITECTURES=120a-real" # Blackwell only, speeds up compile
-        ];
-        # Disable Nix's march=native stripping
-        preConfigure = ''
-          export NIX_ENFORCE_NO_NATIVE=0
-          ${oldAttrs.preConfigure or ""}
-        '';
-      });
-  llama-swap-settings = import ../../modules/llama-swap-settings.nix {
-    llama-cpp-cuda = llama-cpp-cuda;
-    modelDir = "/var/lib/llama-models";
-    lib = pkgs.lib;
-  };
-in
 {
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
@@ -103,12 +53,12 @@ in
     environment.LD_LIBRARY_PATH = "/usr/lib/wsl/lib";
   };
 
-  services.llama-swap = {
-    enable = false;
-    package = unstable-pkgs.llama-swap;
-    listenAddress = "0.0.0.0";
-    settings = llama-swap-settings;
-  };
+  # services.llama-swap = {
+  #   enable = false;
+  #   package = unstable-pkgs.llama-swap;
+  #   listenAddress = "0.0.0.0";
+  #   settings = llama-swap-settings;
+  # };
 
   services.flatpak.enable = true;
   xdg.portal.enable = true;
@@ -125,7 +75,10 @@ in
   # The in-cluster zot registry (infra/zot-registry in the k3s repo) serves
   # plain HTTP on the LAN, so both engines have to allow it without TLS.
   virtualisation.docker.daemon.settings = {
-    insecure-registries = [ "192.168.1.48:5000" "192.168.1.51:5000" ];
+    insecure-registries = [
+      "192.168.1.48:5000"
+      "192.168.1.51:5000"
+    ];
   };
 
   environment.etc."containers/registries.conf.d/10-lan-registry.conf".text = ''
@@ -149,8 +102,9 @@ in
     ];
   };
 
-  environment.systemPackages =
-    (with pkgs; [
+  environment.systemPackages = (
+    with pkgs;
+    [
       xdg-utils
       vim
       wget
@@ -162,8 +116,9 @@ in
       goodbye-script
       bubblewrap # sandbox's runtime; also on PATH for other devshells
       agent-sandbox # provides `sandbox` and `sandbox-verify`
-    ])
-    ++ [ llama-cpp-cuda ];
+    ]
+  );
+  # ++ [ llama-cpp-cuda ];
 
   programs.git.enable = true;
   # VSCode remoting requires dynamic linking to ld-linux

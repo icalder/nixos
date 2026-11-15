@@ -36,6 +36,22 @@
         "type": "github"
       }
     },
+    "agent-lsp": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "path": "packages/agent-lsp",
+        "type": "path"
+      },
+      "original": {
+        "path": "packages/agent-lsp",
+        "type": "path"
+      },
+      "parent": []
+    },
     "agent-sandbox": {
       "inputs": {
         "nixpkgs": [
@@ -303,6 +319,7 @@
       "inputs": {
         "adsbexchange": "adsbexchange",
         "agenix": "agenix",
+        "agent-lsp": "agent-lsp",
         "agent-sandbox": "agent-sandbox",
         "antigravity-nix": "antigravity-nix",
         "fr24feed": "fr24feed",
