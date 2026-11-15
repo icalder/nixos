@@ -39,7 +39,7 @@
   users.groups.llama = { };
 
   systemd.tmpfiles.rules = [
-    "d /var/lib/llama-models 0775 root llama -"
+    # "d /var/lib/llama-models 0775 root llama -"
     # Anchor for the sandbox project bind: WSL interop maps the CWD to
     # \\wsl.localhost\NixOS\app, so /app must exist on the host.
     "d /app 0755 root root -"
@@ -47,7 +47,7 @@
 
   systemd.services.llama-swap = {
     serviceConfig.ReadOnlyPaths = [
-      "/var/lib/llama-models"
+      # "/var/lib/llama-models"
       "/usr/lib/wsl/lib"
     ];
     environment.LD_LIBRARY_PATH = "/usr/lib/wsl/lib";
