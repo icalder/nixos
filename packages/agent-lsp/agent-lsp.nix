@@ -52,3 +52,7 @@ buildGoModule rec {
 
 # Note: langauage server tools:
 # npm update -g typescript-language-server
+
+# Note: agent-lsp configuration:
+# agent-lsp init --with-skills
+# agent-lsp uninstall
